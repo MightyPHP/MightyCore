@@ -110,7 +110,7 @@ class VIEW {
             $mode = DEFAULT_LANG;
         }
 
-        $lang = include_once(UTILITY_PATH."/Lang/$mode/$file.php");
+        $lang = include(UTILITY_PATH."/Lang/$mode/$file.php");
         if(!empty($lang[$var])){
             return $lang[$var];
         }else{
