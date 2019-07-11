@@ -1,0 +1,24 @@
+{
+    "name": "mightyphp/mightycore",
+    "type": "framework",
+    "description": "The Core Framework for MightyPHP Framework",
+    "keywords": ["php","php-framework", "mvc", "framework", "core"],
+    "homepage": "https://mightyphp.github.io",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Desmond Chin Chung Choon",
+            "email": "desmond@desmondchin.xyz",
+            "homepage": "https://desmondchin.xyz",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    },
+	"autoload": {
+        "psr-4": {
+            "MightyCore\\": "src/"
+        }
+    }
+}

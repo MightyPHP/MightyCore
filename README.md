@@ -1,2 +1,2 @@
 # MightyCore
-Core framework files for MightyPHP
+Core Framework for MightyPHP
