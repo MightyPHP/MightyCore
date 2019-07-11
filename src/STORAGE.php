@@ -116,10 +116,10 @@ class STORAGE{
                 $updateQuery .= ",";
             }
             $updateQuery = " $key = ? ";
-            $this->_params.push($value);
+            $this->_params[] = $value;
         }
         // Update timestamp
-        $updateQuery .= " ".DB_MODIFIED_DT_COL."=".MOMENT::now()->toDateTimeString()." ";
+        $updateQuery .= " ,".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
         $this->_main = "UPDATE $this->table SET $updateQuery";
         $query = $this->db->prepare($this->queryBuilder());
         $query->execute($this->_params);
