@@ -45,7 +45,7 @@ class VIEW {
         return $view_file;
     }
 
-    public function twig($data = null){
+    public function twig($data = array()){
         $this->_twig = true;
         $view_file = $this->render();
         $loader = new \Twig\Loader\ArrayLoader([
