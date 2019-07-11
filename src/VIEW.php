@@ -45,7 +45,7 @@ class VIEW {
         return $view_file;
     }
 
-    public function renderTwig($data = null){
+    public function twig($data = null){
         $this->_twig = true;
         $view_file = $this->render();
         return $view_file;
