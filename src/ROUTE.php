@@ -74,6 +74,11 @@ class ROUTE{
             $inbound = ROUTE::$inbound;
         }
 
+        if(substr($inbound, -1) == '/'){
+            /**If link has additional '/', remove it first for comparison */
+            $inbound = substr($inbound,0,(strlen($inbound)-1));
+        }
+
         //To cater for empty request path
         if(empty($inbound)){
             $inbound = "/";
