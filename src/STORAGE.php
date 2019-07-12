@@ -5,6 +5,7 @@ class STORAGE{
     private $db = null;
     private $table = null;
     public static $_this = null;
+    private $mode = null;
 
     /**
      * Query Builder Params
@@ -23,7 +24,8 @@ class STORAGE{
         '>',
         '>=',
         '<=',
-        '<>'
+        '<>',
+        '!='
     ];
 
     private function __construct($db, $table) {
@@ -110,17 +112,19 @@ class STORAGE{
      * @param array Associative array with column to value set for update query
      */
     public function update($update){
+        $this->mode = 'update';
         $updateQuery = '';
+        // var_dump($update);
         foreach($update as $key=>$value){
             if($updateQuery !== ""){
                 $updateQuery .= ",";
             }
-            $updateQuery = " $key = ? ";
+            $updateQuery .= " $key = ? ";
             $this->_params[] = $value;
         }
         // Update timestamp
         $updateQuery .= " ,".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
-        $this->_main = "UPDATE $this->table SET $updateQuery";
+        $this->_main = "UPDATE $this->table ".$this->_join." SET $updateQuery";
         $query = $this->db->prepare($this->queryBuilder());
         $query->execute($this->_params);
     }
@@ -129,7 +133,12 @@ class STORAGE{
      * Query builder
      */
     private function queryBuilder(){
-        return $this->_main." ".$this->_join." ".$this->_where." ".$this->_group." ".$this->_order;
+        if($this->mode == 'update'){
+            $query = $this->_main." ".$this->_where." ".$this->_group." ".$this->_order;
+        }else{
+            $query = $this->_main." ".$this->_join." ".$this->_where." ".$this->_group." ".$this->_order;
+        }
+        return $query;
     }
 
 
