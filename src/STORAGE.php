@@ -218,17 +218,19 @@ class STORAGE{
                 $insertQuery .= ",";
                 $inserQueryValue .= ",";
             }
-            $insertQuery = " $key ";
-            $inserQueryValue = " ? ";
-            $this->_params.push($value);
+            $insertQuery .= " $key ";
+            $inserQueryValue .= " ? ";
+            $this->_params[] = $value;
         }
         // Insert timestamp
         $insertQuery .= " ,".DB_CREATED_DT_COL." ";
-        $this->_params.push(MOMENT::now()->toDateTimeString());
+        $inserQueryValue .= " ,? ";
+        $this->_params[] = MOMENT::now()->toDateTimeString();
 
         $this->_main = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
         $query = $this->db->prepare($this->queryBuilder());
         $query->execute($this->_params);
+        return $this->db->lastInsertId();
     }
 
     /**
