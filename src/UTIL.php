@@ -13,7 +13,7 @@ class UTIL {
             $toLog = JSON_encode($toLog);
         }
         $toLog = MOMENT::now()->toDateTimeString()."\t".$toLog;
-        file_put_contents($_SERVER['DOCUMENT_ROOT']."/Application/Logs/$type"."_".MOMENT::now()->toDateTimeString('Y-m-d').".txt", $toLog.PHP_EOL, FILE_APPEND | LOCK_EX);
+        file_put_contents(LOG_PATH."/$type"."_".MOMENT::now()->toDateTimeString('Y-m-d').".txt", $toLog.PHP_EOL, FILE_APPEND | LOCK_EX);
     }
 
 }
