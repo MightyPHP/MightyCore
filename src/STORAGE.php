@@ -6,6 +6,7 @@ class STORAGE{
     private $table = null;
     public static $_this = null;
     private $mode = null;
+    private $log = false;
 
     /**
      * Query Builder Params
@@ -33,6 +34,19 @@ class STORAGE{
         $this->table = $table;
     }
 
+    private function execute(){
+        if($this->log){
+            $toLog = array(
+                'query' => $this->queryBuilder(),
+                'params' => $this->_params
+            );
+            UTIL::log($toLog,'Storage');
+        }
+        $query = $this->db->prepare($this->queryBuilder());
+        $query->execute($this->_params);
+        return $query;
+    }
+
     /**
      * Init the DB object
      */
@@ -55,10 +69,22 @@ class STORAGE{
         }
     } 
 
+    public function log(){
+        $this->log = true;
+        return $this;
+    }
+
     /**
      * For helper functions not using query builder
      */
     private function query($mode, $query, $param){
+        if($this->log){
+            $toLog = array(
+                'query' => $query,
+                'params' => $param
+            );
+            UTIL::log($toLog,'Storage');
+        }
         $query = $this->db->prepare($query);
         $query->execute($param);
         if($mode == 'select'){
@@ -79,9 +105,7 @@ class STORAGE{
      * @return array The query fetch objects in array
      */
     public function get(){
-        $query = $this->db->prepare($this->queryBuilder());
-        $query->execute($this->_params);
-        return $query->fetchAll(PDO::FETCH_OBJ);
+        return $this->execute()->fetchAll(PDO::FETCH_OBJ);
     }
 
     /**
@@ -90,9 +114,7 @@ class STORAGE{
      * @return array The query fetch results in associative array
      */
     public function getArr(){
-        $query = $this->db->prepare($this->queryBuilder());
-        $query->execute($this->_params);
-        return $query->fetchAll(PDO::FETCH_ASSOC);
+        return $this->execute()->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -101,9 +123,7 @@ class STORAGE{
      * @return object The query fetch object
      */
     public function getOne(){
-        $query = $this->db->prepare($this->queryBuilder());
-        $query->execute($this->_params);
-        return $query->fetch(PDO::FETCH_OBJ);
+        return $this->execute()->fetch(PDO::FETCH_OBJ);
     }
 
     /**
@@ -125,8 +145,7 @@ class STORAGE{
         // Update timestamp
         $updateQuery .= " ,".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
         $this->_main = "UPDATE $this->table ".$this->_join." SET $updateQuery";
-        $query = $this->db->prepare($this->queryBuilder());
-        $query->execute($this->_params);
+        $this->execute();
     }
 
     /**
@@ -228,8 +247,7 @@ class STORAGE{
         $this->_params[] = MOMENT::now()->toDateTimeString();
 
         $this->_main = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
-        $query = $this->db->prepare($this->queryBuilder());
-        $query->execute($this->_params);
+        $this->execute();
         return $this->db->lastInsertId();
     }
 
