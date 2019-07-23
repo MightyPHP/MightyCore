@@ -290,11 +290,13 @@ class STORAGE{
                 if(\in_array($value, $this->_comparisonOperators)){
                     $this->_where .= " $value ";
                 }else{
-                    $this->_where .= " ='$value' ";
+                    $this->_where .= " =? ";
+                    $this->_params[] = $value;
                 }
             }
             if($index == 2){
-                $this->_where .= " '$value' ";
+                $this->_where .= " ? ";
+                $this->_params[] = $value;
             }
             $index++;
         }
@@ -360,6 +362,17 @@ class STORAGE{
                 $this->_order .= " $args[$i] ";
             }
         }
+        return $this;
+    }
+
+    public function groupBy($group){
+        if($this->_group == ''){
+            $this->_group .= " GROUP BY ";
+            $this->_group .= " $group ";
+        }else{
+            $this->_group .= ", $group ";
+        }
+        
         return $this;
     }
 
