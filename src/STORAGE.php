@@ -18,6 +18,7 @@ class STORAGE{
     private $_group = '';
     private $_order = '';
     private $_params = array();
+    private $_updateParams = array();
     
     public $_comparisonOperators = [
         '=',
@@ -35,14 +36,15 @@ class STORAGE{
     }
 
     private function execute(){
+        $query = $this->queryBuilder();
         if($this->log){
             $toLog = array(
-                'query' => $this->queryBuilder(),
+                'query' => $query,
                 'params' => $this->_params
             );
             UTIL::log($toLog,'Storage');
         }
-        $query = $this->db->prepare($this->queryBuilder());
+        $query = $this->db->prepare($query);
         $query->execute($this->_params);
         return $query;
     }
@@ -140,7 +142,7 @@ class STORAGE{
                 $updateQuery .= ",";
             }
             $updateQuery .= " $key = ? ";
-            $this->_params[] = $value;
+            $this->_updateParams[] = $value;
         }
         // Update timestamp
         $updateQuery .= " ,".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
@@ -153,6 +155,7 @@ class STORAGE{
      */
     private function queryBuilder(){
         if($this->mode == 'update'){
+            $this->_params = array_merge($this->_updateParams, $this->_params);
             $query = $this->_main." ".$this->_where." ".$this->_group." ".$this->_order;
         }else{
             $query = $this->_main." ".$this->_join." ".$this->_where." ".$this->_group." ".$this->_order;
