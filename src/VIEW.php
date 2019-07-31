@@ -57,7 +57,7 @@ class VIEW {
     }
 
     private function bindRender($view_file, $data){
-        $helper_functions = ['asset', 'return', 'trans'];
+        $helper_functions = ['asset', 'return', 'trans', 'route'];
         foreach($helper_functions as $k=>$v){
             $pattern = "~\{\{\s*".$v."\((.*?)\)\s*\}\}~";
             if(preg_match_all($pattern, $view_file, $scope)){
@@ -82,6 +82,13 @@ class VIEW {
                         $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
                         $view_file = preg_replace($pattern, $this->mapTrans($kv), $view_file);
                     }  
+                }
+
+                if($v == 'route'){
+                    foreach($param as $kp=>$kv){
+                        $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
+                        $view_file = preg_replace($pattern, ROUTE::getNamedRoutes()[$kv], $view_file);
+                    }
                 }
             }
         }
