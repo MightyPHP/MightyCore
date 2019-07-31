@@ -5,11 +5,19 @@ namespace MightyCore;
 class ROUTE{ 
 
     static $routes = [];
+    static $namedRoutes = [];
     static $inbound = '';
     private static $secure = false;
     private static $group = false;
     private static $middleware = false;
 
+    private $path;
+    private $method;
+
+    public function __construct($method, $path){
+        $this->method = $method;
+        $this->path = $path;
+    }
     /**
      * Filter our URL params from Routing config
      * Returns:
@@ -62,6 +70,11 @@ class ROUTE{
         );
  
         ROUTE::$routes = $routes;
+
+        /**
+         * Return real path for other uses
+         */
+        return $sortedRoute['real_path'];
     }
 
     /**
@@ -186,28 +199,32 @@ class ROUTE{
      * Receives the GET routes
      */
     public static function get($path, $direction){
-        ROUTE::_setPath('GET', $path, $direction);
+        $path = ROUTE::_setPath('GET', $path, $direction);
+        return new ROUTE('GET', $path);
     }
 
     /**
      * Receives the POST routes
      */
     public static function post($path, $direction){
-        ROUTE::_setPath('POST', $path, $direction);
+        $path = ROUTE::_setPath('POST', $path, $direction);
+        return new ROUTE('POST', $path);
     }
 
     /**
      * Receives the PUT routes
      */
     public static function put($path, $direction){
-        ROUTE::_setPath('PUT', $path, $direction);
+        $path = ROUTE::_setPath('PUT', $path, $direction);
+        return new ROUTE('PUT', $path);
     }
 
     /**
      * Receives the DELETE routes
      */
     public static function delete($path, $direction){
-        ROUTE::_setPath('DELETE', $path, $direction);
+        $path = ROUTE::_setPath('DELETE', $path, $direction);
+        return new ROUTE('DELETE', $path);
     }
 
 
@@ -216,6 +233,25 @@ class ROUTE{
      */
     public static function getRoutes(){
         return ROUTE::$routes;
+    }
+
+    /**
+     * Return all named routes that are already set
+     */
+    public static function getNamedRoutes(){
+        return ROUTE::$namedRoutes;
+    }
+
+    /**
+     * Assigns a name for the route
+     */
+    public function name($name){
+        $routes = ROUTE::$namedRoutes;
+        if(!empty($routes[$name])){
+            throw new \Exception("The route name '$name' is already assigned to another route.");
+        }
+        $routes[$name] = $this->path;
+        ROUTE::$namedRoutes = $routes;
     }
 }
 
