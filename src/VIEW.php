@@ -57,11 +57,22 @@ class VIEW {
     }
 
     private function bindRender($view_file, $data){
-        $helper_functions = ['asset', 'return', 'trans', 'route'];
+        /**
+         * Include method must come first to include all html before binding
+         */
+        $helper_functions = ['include','asset', 'return', 'trans', 'route'];
         foreach($helper_functions as $k=>$v){
             $pattern = "~\{\{\s*".$v."\((.*?)\)\s*\}\}~";
             if(preg_match_all($pattern, $view_file, $scope)){
                 $param = $scope[1];
+
+                if($v == 'include'){
+                    foreach($param as $kp=>$kv){
+                        $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
+                        $view_file = preg_replace($pattern, file_get_contents(VIEW_PATH . '/' . $kv . ".html"), $view_file);
+                    } 
+                }
+
                 if($v == 'return'){
                     foreach($param as $kp=>$kv){
                         $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
