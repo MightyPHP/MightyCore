@@ -27,7 +27,7 @@ class CONSOLE {
     private function start(){
         try {
             $port=8000;
-            if (strpos($this->argv[2], '--port=') !== false) {
+            if (!empty($this->argv[2]) && strpos($this->argv[2], '--port=') !== false) {
                 $port = substr($this->argv[2],7);
             }
             
