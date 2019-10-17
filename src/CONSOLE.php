@@ -11,10 +11,16 @@ class CONSOLE {
         if(!empty($arg[1])){
             $this->func = $arg[1];
         }
+
+        $commands = ['start', 'seed'];
        
         // $this->method = $arg[0];
         $method = $arg[0];
-        $this->$method();
+        if(\in_array($method, $commands)){
+            $this->$method();
+        }else{
+            echo 'Console Command not found';
+        }
     }
 
     public function crypto_rand_secure($min, $max)
@@ -51,25 +57,268 @@ class CONSOLE {
         return $token;
     }
 
-    private function migrate(){
+    private function seed(){
         if($this->func == "create"){
-            $token = $this->getToken(32);
-            $fp=fopen(UTILITY_PATH."/Migrations/$token.php",'w');
-            $seed_template = "
-<?php
-use MightyCore\SEED;
-class $token extends SEED{
-    public function up(){
+            $connection='default';
+            if (!empty($this->argv[2]) && strpos($this->argv[2], '--connection=') !== false) {
+                $connection = substr($this->argv[2],13);
+            }
 
+            /**
+             * Writes the template file
+             */
+            $token = $this->getToken(32);
+            $fp=fopen(UTILITY_PATH."/Seeds/$token.php",'w');
+            $seed_template = '
+<?php
+class '.$token.'{
+    public $timestamp='.strtotime(date('Y-m-d H:i:s')).';
+    public $connection="'.$connection.'";
+    public function up(){
+        return [
+
+        ];
     }
 
     public function down(){
+        return [
 
+        ];
     }
 }
-            ";
+            ';
             fwrite($fp, "$seed_template");
             fclose($fp);
+        }
+
+        else if($this->func == "plant"){
+            $this->getDefaultDB();
+            $dir = UTILITY_PATH."/Seeds";
+            $seeds = scandir($dir);
+            $classArr = array();
+            for($i=0; $i<sizeof($seeds); $i++){
+                if(strpos($seeds[$i], '.php')){
+                    $class = explode(".php", $seeds[$i])[0];
+                    require_once $dir."/".$seeds[$i];
+                    $seed = new $class();
+
+                    $classArr[$seed->timestamp] = $class;
+                }
+            }
+
+            /**
+             * Sort the seeds by timestamp
+             */
+            ksort($classArr);
+            // var_dump($classArr);
+
+            /**
+             * Get existing seeds
+             */
+            $seeded = $this->getSeededSeeds("ASC");
+            $seededArr = array_column($seeded, 'seed');
+            $latest = '';
+            foreach($classArr as $key=>$value){
+                if(!\in_array($value, $seededArr)){
+                    $seed = new $value();
+                    $latest = $value;
+                    $queries = $seed->up();
+                    for($j=0; $j<sizeof($queries); $j++){
+                        $this->alterTable($seed->connection, $queries[$j]);
+                        $this->writeMigrateDB($value);
+                    }
+                }
+            }
+
+            echo "Seed to $latest successfully...";
+        }
+
+        else if($this->func == "rollback"){
+            $dir = UTILITY_PATH."/Seeds";
+            if (!empty($this->argv[2]) && strpos($this->argv[2], '--seed=') !== false) {
+                $seed = substr($this->argv[2],7);
+                $done = false;
+                $seeded = $this->getSeededSeeds("DESC");
+                $seeded = array_column($seeded, 'seed');
+
+                if(\in_array($seed, $seeded)){
+                    for($s=0; $s<sizeof($seeded); $s++){
+                        if($done === false){
+                            $existingSeed = $seeded[$s];
+                            /**
+                             * This should be the last rollback
+                             * so set done as true
+                             */
+                            if($seed==$existingSeed){
+                                $done = true;
+                            }
+                            require_once $dir."/".$existingSeed.".php";
+                            $seedClass = new $existingSeed();
+                            $queries = $seedClass->down();
+                            for($j=0; $j<sizeof($queries); $j++){
+                                $this->alterTable($seedClass->connection, $queries[$j]);
+
+                                if(($s+1) !== sizeof($seeded)){
+                                    $this->deleteMigrateDB($existingSeed);
+                                }
+                            }
+                        }else{
+                            break;
+                        }
+                    }
+                }
+                echo "Rollback to $seed successfully...";
+            }else{
+                die('Seed ID is needed.');
+            }
+
+           
+        }
+
+        else{
+            die("Seed does not have such method");
+        }
+    }
+
+    private function getDefaultDB(){
+        $db = 'default';
+        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
+        if (isset($config[$db])) {
+            $servername = $config[$db]['servername'];
+            $username = $config[$db]['username'];
+            $password = $config[$db]['password'];
+            $database = $config[$db]['database'];
+            try {
+                $db = new \PDO("mysql:host=$servername", $username, $password);
+                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                $stmt = $db->prepare("CREATE DATABASE IF NOT EXISTS $database;");
+                $stmt->execute();
+                return true;
+            } catch (PDOException $e) {
+                die($e);
+            }
+        }
+    }
+
+    private function getSeededSeeds($mode){
+        $db = 'default';
+        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
+        if (isset($config[$db])) {
+            $servername = $config[$db]['servername'];
+            $username = $config[$db]['username'];
+            $password = $config[$db]['password'];
+            $database = $config[$db]['database'];
+            try {
+                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                $stmt = $db->prepare("SHOW TABLES LIKE 'seeds'");
+                $stmt->execute();
+                $data = $stmt->fetch(\PDO::FETCH_OBJ);
+                
+                /**
+                 * Check if SEEDS table exist
+                 * if yes, select them seeds
+                 */
+                if($data !== false){
+                    $stmt = $db->prepare("SELECT seed FROM seeds ORDER BY id $mode");
+                    $stmt->execute();
+                    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC); 
+                    return $data;
+                }else{
+                    return [];
+                }
+
+
+            } catch (PDOException $e) {
+                die($e);
+            }
+        } else {
+            throw new Exception('Database does not exist');
+        }
+    }
+
+    private function alterTable($db, $query){
+        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
+        if (isset($config[$db])) {
+            $servername = $config[$db]['servername'];
+            $username = $config[$db]['username'];
+            $password = $config[$db]['password'];
+            $database = $config[$db]['database'];
+            try {
+                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                $stmt = $db->prepare($query);
+                $stmt->execute();
+            } catch (PDOException $e) {
+                die($e);
+            }
+        } else {
+            throw new Exception('Database does not exist');
+        }
+    }
+
+    private function deleteMigrateDB($token){
+        $db = 'default';
+        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
+        if (isset($config[$db])) {
+            $servername = $config[$db]['servername'];
+            $username = $config[$db]['username'];
+            $password = $config[$db]['password'];
+            $database = $config[$db]['database'];
+            try {
+                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                
+                $stmt = $db->prepare("DELETE FROM `seeds` WHERE seed='$token';");
+                $stmt->execute();
+            } catch (PDOException $e) {
+                die($e);
+            }
+        } else {
+            throw new Exception('Database does not exist');
+        }
+    }
+
+    private function writeMigrateDB($token){
+        $db = 'default';
+        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
+        if (isset($config[$db])) {
+            $servername = $config[$db]['servername'];
+            $username = $config[$db]['username'];
+            $password = $config[$db]['password'];
+            $database = $config[$db]['database'];
+            try {
+                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                $stmt = $db->prepare("SHOW TABLES LIKE 'seeds'");
+                $stmt->execute();
+                $data = $stmt->fetch(\PDO::FETCH_OBJ);
+                
+                /**
+                 * Check if SEEDS table exist
+                 * if not, create
+                 */
+                if($data === false){
+                    $stmt = $db->prepare("CREATE TABLE seeds (
+                        id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                        seed VARCHAR(32) NOT NULL,
+                        created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        modified_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                        )");
+                    $stmt->execute();
+                }
+
+                /**
+                 * Insert into DB
+                 */
+                $stmt = $db->prepare("INSERT INTO seeds (seed)
+                                        VALUES ('$token')");
+                $stmt->execute();
+            } catch (PDOException $e) {
+                die($e);
+            }
+        } else {
+            throw new Exception('Database does not exist');
         }
     }
 
