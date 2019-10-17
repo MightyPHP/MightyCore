@@ -13,17 +13,59 @@ class REQUEST{
         REQUEST::$query = $query;
     }
 
+    public static function secure($request){
+        /**
+         * This is the first protection of the framework
+         * CSRF protection goes here
+         */
+        foreach ((array) $request as $k => $v) {
+            $string = str_replace(' ', '-', $v); // Replaces all spaces with hyphens.
+            $request[$k] = preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+        }
+
+        /**
+         * Starts assigning CSRF token
+         */
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        if($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'PUT' || $_SERVER['REQUEST_METHOD'] == 'DELETE'){
+            /**
+             * Checks for CSRF
+             */
+            
+            if(!empty($request['csrf_token'])){
+                if (hash_equals($_SESSION['csrf_token'], $request['csrf_token'])) {
+                    return $request;
+                } else {
+                    RESPONSE::return("Unauthorized", 401);
+                }
+            }else if(!empty($_SERVER['HTTP_X_CSRF_TOKEN'])){
+                if (hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])) {
+                    return $request;
+                } else {
+                    RESPONSE::return("Unauthorized", 401);
+                }
+            }else{
+                RESPONSE::return("Unauthorized", 401);
+            }
+        }else{
+            return $request;
+        }
+    }
+
     public static function init($request){
         $query = array();
         foreach ((array) $request as $k => $v) {
-            if ($k == 'request' && empty(ROUTE::$inbound)) {
+            if ($k == '_request_' && empty(ROUTE::$inbound)) {
                 $last_char = substr($v, -1);
                 if($last_char == "/"){
                     /**Remove appending slash for comparison */
                     $v = substr($v,0,strlen($v)-1);
                 }
                 ROUTE::$inbound = "/".$v;
-            }else if($k !== 'request'){
+            }else if($k !== '_request_'){
                 $query[$k] = $v;
             }
         }

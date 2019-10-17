@@ -15,13 +15,19 @@ class APP {
             REQUEST::$ajax = true;
         }
 
-        REQUEST::init($request);
         /**
          * Starts session
          */
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
+
+        /**
+         * Secure the request,
+         * then start
+         */
+        REQUEST::init(REQUEST::secure($request));
+        
         $this->_security = new SECURITY();
         if(MIGHTY_MODE=="prod"){
             set_error_handler($this->errorHandler());
