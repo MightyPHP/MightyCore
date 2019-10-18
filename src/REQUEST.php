@@ -24,7 +24,7 @@ class REQUEST{
             $request[$k] = preg_replace('/[^A-Za-z0-9\-\/]/', '', $string); // Removes special chars.
 
             if($k == "csrf_token"){
-                REQUEST::$csrfToken = $request[k];
+                REQUEST::$csrfToken = $request[$k];
             }
         }
         return $request;

@@ -14,7 +14,7 @@ if (preg_match('/\.(?:png|jpg|jpeg|gif|css|js|woff|woff2|ttf|html|otf|svg)/', $_
     $pos = strpos($_SERVER['REQUEST_URI'],ROOT_PATH);
     $request = substr($_SERVER['REQUEST_URI'],$pos+1);
     if(!empty($request)){
-        $_REQUEST['request'] = $request;
+        $_REQUEST['_request_'] = $request;
     }
     
     include_once __DIR__.'/../../../../../Public/index.php';
