@@ -89,6 +89,7 @@ class '.$token.'{
             ';
             fwrite($fp, "$seed_template");
             fclose($fp);
+            echo "Seed $token created successfully in ".UTILITY_PATH."/Seeds";
         }
 
         else if($this->func == "plant"){
@@ -125,8 +126,8 @@ class '.$token.'{
                     $queries = $seed->up();
                     for($j=0; $j<sizeof($queries); $j++){
                         $this->alterTable($seed->connection, $queries[$j]);
-                        $this->writeMigrateDB($value);
                     }
+                    $this->writeMigrateDB($value);
                 }
             }
 
