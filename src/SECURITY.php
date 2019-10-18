@@ -6,6 +6,18 @@ class SECURITY {
     public $_config = null;
     private $_db = null;
     public $auth = null;
+
+    public function __construct(){
+        /**
+         * Starts assigning CSRF token
+         */
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+    }
     
     private function authUser($id){
         if (session_status() == PHP_SESSION_NONE) {
@@ -60,6 +72,34 @@ class SECURITY {
         }
     }
 
+    public function csrfCheck($route){
+        if($route['api'] == false){
+            if($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'PUT' || $_SERVER['REQUEST_METHOD'] == 'DELETE'){
+                /**
+                 * Checks for CSRF
+                 */
+                if(!empty(REQUEST::$csrfToken)){
+                    if (hash_equals($_SESSION['csrf_token'], REQUEST::$csrfToken)) {
+                        return true;
+                    } else {
+                        RESPONSE::return("Unauthorized", 401);
+                    }
+                }else if(!empty($_SERVER['HTTP_X_CSRF_TOKEN'])){
+                    if (hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])) {
+                        return true;
+                    } else {
+                        RESPONSE::return("Unauthorized", 401);
+                    }
+                }else{
+                    RESPONSE::return("Unauthorized", 401);
+                }
+            }else{
+                return true;
+            }
+        }else{
+            return true;
+        }
+    }
 }
 
 ?>

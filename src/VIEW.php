@@ -20,8 +20,13 @@ class VIEW {
         
         if (!empty($this->_template)) {
             $template_file = file_get_contents(TEMPLATE_PATH . '/' . $this->_template . ".html");
-            $view_file = str_replace('{%contents%}', $view_file, $template_file);  
+            $view_file = preg_replace('/{{\s*(@contents)\s*}}/', $view_file, $template_file);
         }
+
+        /**
+         * Injects CSRF
+         */
+        $view_file = preg_replace('/{{\s*(@csrf)\s*}}/', '<input id="csrf_token" name="csrf_token" type="hidden" value='.$_SESSION['csrf_token'].' />', $view_file);
 
         $view_file = $this->bindRender($view_file, $data);
         
@@ -60,7 +65,7 @@ class VIEW {
         /**
          * Include method must come first to include all html before binding
          */
-        $helper_functions = ['include','asset', 'return', 'trans', 'route'];
+        $helper_functions = ['include','asset', 'return', 'trans', 'route', 'csrf_token'];
         foreach($helper_functions as $k=>$v){
             $pattern = "~\{\{\s*".$v."\((.*?)\)\s*\}\}~";
             if(preg_match_all($pattern, $view_file, $scope)){
@@ -99,6 +104,13 @@ class VIEW {
                     foreach($param as $kp=>$kv){
                         $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
                         $view_file = preg_replace($pattern, ROUTE::getNamedRoutes()[$kv], $view_file);
+                    }
+                }
+
+                if($v == 'csrf_token'){
+                    foreach($param as $kp=>$kv){
+                        $pattern = "~\{\{\s*".$v."\(()\)\s*\}\}~";
+                        $view_file = preg_replace($pattern, $_SESSION['csrf_token'], $view_file);
                     }
                 }
             }

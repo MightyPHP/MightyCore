@@ -15,13 +15,19 @@ class APP {
             REQUEST::$ajax = true;
         }
 
-        REQUEST::init($request);
         /**
          * Starts session
          */
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
+
+        /**
+         * Secure the request,
+         * then start
+         */
+        REQUEST::init(REQUEST::secure($request));
+
         $this->_security = new SECURITY();
         if(MIGHTY_MODE=="prod"){
             set_error_handler($this->errorHandler());
@@ -36,9 +42,13 @@ class APP {
         try{
             /**Get routing afer processing */
             $route = ROUTE::getProccessedRoute(REQUEST::$method);
+
             if($route === false || empty($route)){
                 RESPONSE::return('Not found', 404);
             }else{
+                /**Checks for CSRF */
+                $this->_security->csrfCheck($route);
+
                 /**Start to administer middleware */
                 if($route['middleware']){
                     foreach($route['middleware'] as $k=>$v){
