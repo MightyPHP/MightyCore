@@ -8,6 +8,7 @@ class ROUTE{
     static $namedRoutes = [];
     static $inbound = '';
     private static $secure = false;
+    private static $api = false;
     private static $group = false;
     private static $middleware = false;
 
@@ -66,6 +67,7 @@ class ROUTE{
             "method" => $split[1],
             "params" => $sortedRoute['params'],
             "secure" => ROUTE::$secure,
+            "api" => ROUTE::$api,
             "middleware" => ROUTE::$middleware
         );
  
@@ -162,6 +164,18 @@ class ROUTE{
         $func();
         /**Set back to false to prevent carry-forwarding effects */
         ROUTE::$secure = false;
+    }
+
+    /**
+     * Set Route as API
+     */
+    public static function api($func){
+        ROUTE::$group .= "/api";
+        ROUTE::$api = true;
+        $func();
+        /**Set back to false to prevent carry-forwarding effects */
+        ROUTE::$api = false;
+        ROUTE::$group = false;
     }
 
     /**
