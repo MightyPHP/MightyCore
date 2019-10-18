@@ -20,8 +20,11 @@ class REQUEST{
          * Filtering done here
          */
         foreach ((array) $request as $k => $v) {
-            $string = str_replace(' ', '-', $v); // Replaces all spaces with hyphens.
-            $request[$k] = preg_replace('/[^A-Za-z0-9\-\/]/', '', $string); // Removes special chars.
+            /**
+             * Removed all filtering. There's no benefit to protecting with this method.
+             */
+            // $string = str_replace(' ', '-', $v); // Replaces all spaces with hyphens.
+            // $request[$k] = preg_replace('/[^A-Za-z0-9\-\/@.]/', '', $string); // Removes special chars.
 
             if($k == "csrf_token"){
                 REQUEST::$csrfToken = $request[$k];
