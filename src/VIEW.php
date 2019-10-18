@@ -51,13 +51,19 @@ class VIEW {
         if($legacy == true){
             return $view_file;
         }else{
-            $loader = new \Twig\Loader\ArrayLoader([
+            $loader1 = new \Twig\Loader\ArrayLoader([
                 'twig' => $view_file,
             ]);
+
+            $loader2 = new \Twig\Loader\FilesystemLoader(VIEW_PATH);
+
+            $loader = new \Twig\Loader\ChainLoader([$loader1, $loader2]);
             $twig = new \Twig\Environment($loader);
+
             if(empty($data)){
                 $data = array();
             }
+            
             return $twig->render('twig', $data);
         }
     }
