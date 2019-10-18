@@ -5,7 +5,7 @@ class VIEW {
     protected $_view;
     protected $_template;
     protected $_controller;
-    private $_twig = false;
+    protected $_legacy=false;
 
     public function __construct($controller, $view, $template = NULL, $templateData = NULL) {
         $this->_controller = $controller;
@@ -14,8 +14,8 @@ class VIEW {
         $this->_templateData = $templateData;
     }
 
-    public function render($data = null) {
-
+    public function render($data = null, $legacy = false) {
+        $this->legacy = $legacy;
         $view_file = file_get_contents(VIEW_PATH . '/' . $this->_view . ".html");
         
         if (!empty($this->_template)) {
@@ -27,10 +27,10 @@ class VIEW {
          * Injects CSRF
          */
         $view_file = preg_replace('/{{\s*(@csrf)\s*}}/', '<input id="csrf_token" name="csrf_token" type="hidden" value='.$_SESSION['csrf_token'].' />', $view_file);
-
+        
         $view_file = $this->bindRender($view_file, $data);
         
-        if (isset($data) && $this->_twig == false) {
+        if (isset($data) && $legacy == true) {
             foreach ($data as $key => $value) {
                 if (is_array($value)) {
                     $value = json_encode($value);
@@ -41,18 +41,30 @@ class VIEW {
         
         // $view_file = $this->mapControllers($view_file);
         $view_file = $this->mapRedirects($view_file);
-        if($this->_twig == false){
+        if($legacy == true){
             $view_file = $this->cleanUpTags($view_file);
         }
         if(MIGHTY_MODE == 'prod'){
             $view_file =str_replace(array("\r", "\n"), '', $view_file);        
         }
-        return $view_file;
+
+        if($legacy == true){
+            return $view_file;
+        }else{
+            $loader = new \Twig\Loader\ArrayLoader([
+                'twig' => $view_file,
+            ]);
+            $twig = new \Twig\Environment($loader);
+            if(empty($data)){
+                $data = array();
+            }
+            return $twig->render('twig', $data);
+        }
     }
 
     public function twig($data = array()){
-        $this->_twig = true;
-        $view_file = $this->render();
+        $this->_legacy = true;
+        $view_file = $this->render(null, true);
         $loader = new \Twig\Loader\ArrayLoader([
             'twig' => $view_file,
         ]);
@@ -116,7 +128,7 @@ class VIEW {
             }
         }
 
-        if (isset($data) && $this->_twig == false) {
+        if (isset($data) && $this->_legacy == true) {
             foreach ($data as $k => $v) {
                 $pattern = "~\{\{\s*(".$k.")\s*\}\}~";
                 if (is_array($v)) {
