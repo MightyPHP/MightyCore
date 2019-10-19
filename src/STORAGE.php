@@ -257,7 +257,7 @@ class STORAGE{
     public function delete(){
         $this->_main = "DELETE ";
         $this->_main .= " FROM $this->table ";
-        return $this;
+        $this->execute();
     }
 
     /**
