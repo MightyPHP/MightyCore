@@ -254,6 +254,12 @@ class STORAGE{
         return $this->db->lastInsertId();
     }
 
+    public function delete(){
+        $this->_main = "DELETE ";
+        $this->_main .= " FROM $this->table ";
+        return $this;
+    }
+
     /**
      * Generates the select query
      * 
