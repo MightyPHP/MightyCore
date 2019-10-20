@@ -397,6 +397,12 @@ class STORAGE{
         return $this;
     }
 
+    public function rightJoin(){
+        $args = func_get_args();
+        $this->joinProcessor('RIGHT JOIN', $args);
+        return $this;
+    }
+
     public function outerJoin(){
         $args = func_get_args();
         $this->joinProcessor('OUTER JOIN', $args);
