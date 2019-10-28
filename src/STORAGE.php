@@ -7,6 +7,7 @@ class STORAGE{
     public static $_this = null;
     private $mode = null;
     private $log = false;
+    private $isJoin = false;
 
     /**
      * Query Builder Params
@@ -19,6 +20,8 @@ class STORAGE{
     private $_order = '';
     private $_params = array();
     private $_updateParams = array();
+
+    private $_tables = array();
     
     public $_comparisonOperators = [
         '=',
@@ -33,6 +36,11 @@ class STORAGE{
     private function __construct($db, $table) {
         $this->db = $db;
         $this->table = $table;
+    }
+
+    private function getTableObject($table){
+        $query = $this->db->prepare("DESCRIBE $table");
+        return $query->execute()->fetchAll(PDO::FETCH_OBJ)
     }
 
     private function execute(){
@@ -145,7 +153,7 @@ class STORAGE{
             $this->_updateParams[] = $value;
         }
         // Update timestamp
-        $updateQuery .= " ,".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
+        $updateQuery .= " ,".$this->table.".".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
         $this->_main = "UPDATE $this->table ".$this->_join." SET $updateQuery";
         $this->execute();
     }
@@ -252,12 +260,6 @@ class STORAGE{
         $this->_main = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
         $this->execute();
         return $this->db->lastInsertId();
-    }
-
-    public function delete(){
-        $this->_main = "DELETE ";
-        $this->_main .= " FROM $this->table ";
-        $this->execute();
     }
 
     /**
@@ -394,12 +396,6 @@ class STORAGE{
     public function leftJoin(){
         $args = func_get_args();
         $this->joinProcessor('LEFT JOIN', $args);
-        return $this;
-    }
-
-    public function rightJoin(){
-        $args = func_get_args();
-        $this->joinProcessor('RIGHT JOIN', $args);
         return $this;
     }
 
