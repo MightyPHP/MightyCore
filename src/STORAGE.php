@@ -38,11 +38,6 @@ class STORAGE{
         $this->table = $table;
     }
 
-    private function getTableObject($table){
-        $query = $this->db->prepare("DESCRIBE $table");
-        return $query->execute()->fetchAll(PDO::FETCH_OBJ)
-    }
-
     private function execute(){
         $query = $this->queryBuilder();
         if($this->log){
@@ -153,7 +148,7 @@ class STORAGE{
             $this->_updateParams[] = $value;
         }
         // Update timestamp
-        $updateQuery .= " ,".$this->table.".".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
+        // $updateQuery .= " ,".$this->table.".".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
         $this->_main = "UPDATE $this->table ".$this->_join." SET $updateQuery";
         $this->execute();
     }
@@ -218,18 +213,18 @@ class STORAGE{
             /**Update */
             if($ifExistFail){ return false; }
             // Update the datetime
-            $setQuery .= " ,".DB_MODIFIED_DT_COL."=? ";
-            $setParam[] = MOMENT::now()->toDateTimeString();
+            // $setQuery .= " ,".DB_MODIFIED_DT_COL."=? ";
+            // $setParam[] = MOMENT::now()->toDateTimeString();
             $query = "UPDATE $this->table SET $setQuery WHERE $whereQuery";
             return $this->query('update',$query, array_merge($setParam, $selectParam));
         }else{
             /**Create */
-            $insertQuery .= " , ".DB_CREATED_DT_COL." ";
-            $insertQuery .= " , ".DB_MODIFIED_DT_COL." ";
-            $inserQueryValue .= ", ? ";
-            $inserQueryValue .= ", ? ";
-            $setParam[] = MOMENT::now()->toDateTimeString();
-            $setParam[] = MOMENT::now()->toDateTimeString();
+            // $insertQuery .= " , ".DB_CREATED_DT_COL." ";
+            // $insertQuery .= " , ".DB_MODIFIED_DT_COL." ";
+            // $inserQueryValue .= ", ? ";
+            // $inserQueryValue .= ", ? ";
+            // $setParam[] = MOMENT::now()->toDateTimeString();
+            // $setParam[] = MOMENT::now()->toDateTimeString();
             $query = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
             return $this->query('insert',$query, $setParam);
         }
@@ -253,9 +248,9 @@ class STORAGE{
             $this->_params[] = $value;
         }
         // Insert timestamp
-        $insertQuery .= " ,".DB_CREATED_DT_COL." ";
-        $inserQueryValue .= " ,? ";
-        $this->_params[] = MOMENT::now()->toDateTimeString();
+        // $insertQuery .= " ,".DB_CREATED_DT_COL." ";
+        // $inserQueryValue .= " ,? ";
+        // $this->_params[] = MOMENT::now()->toDateTimeString();
 
         $this->_main = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
         $this->execute();
