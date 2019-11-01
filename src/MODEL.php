@@ -31,7 +31,7 @@ class MODEL {
     public $_db = null;
     
     public function __construct($conn = NULL, $db = NULL) {
-        $this->_config = parse_ini_file("Configs/databases.ini", true);
+        $this->_config = parse_ini_file(__DIR__."/../../../../Configs/databases.ini", true);
         if (!empty($conn)) {
             $this->_conn = $conn;
         } 
