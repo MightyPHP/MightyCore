@@ -59,6 +59,19 @@ class VIEW {
 
             $loader = new \Twig\Loader\ChainLoader([$loader1, $loader2]);
             $twig = new \Twig\Environment($loader);
+            $routeFunction = new \Twig\TwigFunction('route', function ($value) {
+                $route = '';
+                if(!empty(ROUTE::getNamedRoutes()[$value])){
+                    $route = ROUTE::getNamedRoutes()[$value];
+                }
+                return $route;
+            });
+            $twig->addFunction($routeFunction);
+
+            $csrfFunction = new \Twig\TwigFunction('csrf_token', function () {
+                return $_SESSION['csrf_token'];
+            });
+            $twig->addFunction($csrfFunction);
 
             if(empty($data)){
                 $data = array();
