@@ -195,7 +195,7 @@ class VIEW {
     private function cleanUpTags($template){
         if (preg_match_all("~\{\%\s*(.*?)\s*\%\}~", $template, $arr)) {
             foreach ($arr[0] as $k => $v) {
-                $template = str_replace($v, '""', $template);
+                $template = str_replace($v, '', $template);
             }
         }
         return $template;
