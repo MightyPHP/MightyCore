@@ -9,7 +9,7 @@ class SCHEMATIC{
     $this->table = $table;
   }
 
-  public static function create($table, ){
+  public static function create($table){
       return new SCHEMATIC($table);
   }
 }
