@@ -27,8 +27,21 @@ class VIEW {
          * Injects CSRF
          */
         $view_file = preg_replace('/{{\s*(@csrf)\s*}}/', '<input id="csrf_token" name="csrf_token" type="hidden" value='.$_SESSION['csrf_token'].' />', $view_file);
+
+        $pattern = "/{{\s*(@return(.*?))\s*}}/";
+        if(preg_match_all($pattern, $view_file, $scope)){
+            if(!empty($scope) && !empty($scope[2])){
+                for($s=0; $s<sizeof($scope[2]); $s++){
+                    $str = '$this->mapControllers'.$scope[2][$s];
+                    eval("\$str = $str;");
+                    $view_file = preg_replace($pattern, $str, $view_file);
+                }
+            }   
+        }
         
-        $view_file = $this->bindRender($view_file, $data);
+        if($legacy == true){
+            $view_file = $this->bindRender($view_file, $data);
+        }
         
         if (isset($data) && $legacy == true) {
             foreach ($data as $key => $value) {
@@ -39,9 +52,8 @@ class VIEW {
             }
         }
         
-        // $view_file = $this->mapControllers($view_file);
-        $view_file = $this->mapRedirects($view_file);
         if($legacy == true){
+            $view_file = $this->mapRedirects($view_file);
             $view_file = $this->cleanUpTags($view_file);
         }
         if(MIGHTY_MODE == 'prod'){
@@ -59,6 +71,42 @@ class VIEW {
 
             $loader = new \Twig\Loader\ChainLoader([$loader1, $loader2]);
             $twig = new \Twig\Environment($loader);
+
+            /**
+             * route() function
+             */
+            $routeFunction = new \Twig\TwigFunction('route', function ($value) {
+                $route = '';
+                if(!empty(ROUTE::getNamedRoutes()[$value])){
+                    $route = ROUTE::getNamedRoutes()[$value];
+                }
+                return $route;
+            });
+            $twig->addFunction($routeFunction);
+
+            /**
+             * csrf_token() function
+             */
+            $csrfFunction = new \Twig\TwigFunction('csrf_token', function () {
+                return $_SESSION['csrf_token'];
+            });
+            $twig->addFunction($csrfFunction);
+
+            /**
+             * trans() function
+             */
+            $transFunction = new \Twig\TwigFunction('trans', function ($value) {
+                return $this->mapTrans($value);
+            });
+            $twig->addFunction($transFunction);
+
+            /**
+             * return() function
+             */
+            $returnFunction = new \Twig\TwigFunction('return', function ($value) {
+                return new \Twig_Markup($this->mapControllers($value), "utf-8");
+            });
+            $twig->addFunction($returnFunction);
 
             if(empty($data)){
                 $data = array();
@@ -121,7 +169,11 @@ class VIEW {
                 if($v == 'route'){
                     foreach($param as $kp=>$kv){
                         $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
-                        $view_file = preg_replace($pattern, ROUTE::getNamedRoutes()[$kv], $view_file);
+                        $route = '';
+                        if(!empty(ROUTE::getNamedRoutes()[$kv])){
+                            $route = ROUTE::getNamedRoutes()[$kv];
+                        }
+                        $view_file = preg_replace($pattern, $route, $view_file);
                     }
                 }
 

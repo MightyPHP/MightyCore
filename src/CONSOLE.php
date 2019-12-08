@@ -169,14 +169,27 @@ class '.$token.'{
                     }
                 }
                 echo "Rollback to $seed successfully...";
+            }else if (!empty($this->argv[2]) && strpos($this->argv[2], '--all') !== false) {
+                $seeded = $this->getSeededSeeds("DESC");
+                $seeded = array_column($seeded, 'seed');
+                    for($s=0; $s<sizeof($seeded); $s++){
+                        $existingSeed = $seeded[$s];
+
+                        require_once $dir."/".$existingSeed.".php";
+                        $seedClass = new $existingSeed();
+                        $queries = $seedClass->down();
+                        for($j=0; $j<sizeof($queries); $j++){
+                            $this->alterTable($seedClass->connection, $queries[$j]);
+
+                            if(($s+1) !== sizeof($seeded)){
+                                $this->deleteMigrateDB($existingSeed);
+                            }
+                        }
+                    }
             }else{
                 die('Seed ID is needed.');
             }
-
-           
-        }
-
-        else{
+        }else{
             die("Seed does not have such method");
         }
     }
