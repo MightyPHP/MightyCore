@@ -108,6 +108,15 @@ class VIEW {
             });
             $twig->addFunction($returnFunction);
 
+            /**
+             * asset() function
+             */
+            $returnFunction = new \Twig\TwigFunction('asset', function ($value) {
+                include_once(UTILITY_PATH."/Helpers/asset.php");
+                return \asset($value);
+            });
+            $twig->addFunction($returnFunction);
+
             if(empty($data)){
                 $data = array();
             }
