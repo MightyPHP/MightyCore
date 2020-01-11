@@ -108,10 +108,20 @@ class VIEW {
             });
             $twig->addFunction($returnFunction);
 
+            /**
+             * asset() function
+             */
+            $assetFunction = new \Twig\TwigFunction('asset', function ($value) {
+                include_once(UTILITY_PATH."/Helpers/asset.php");
+                return \asset($value);
+            });
+            $twig->addFunction($assetFunction);
+
             if(empty($data)){
                 $data = array();
             }
             
+            $twig->addGlobal('session', $_SESSION);
             return $twig->render('twig', $data);
         }
     }
