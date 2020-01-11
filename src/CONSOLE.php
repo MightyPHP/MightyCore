@@ -12,7 +12,7 @@ class CONSOLE {
             $this->func = $arg[1];
         }
 
-        $commands = ['start', 'seed'];
+        $commands = ['start', 'seed', 'hello_world'];
        
         // $this->method = $arg[0];
         $method = $arg[0];
@@ -57,6 +57,10 @@ class CONSOLE {
         return $token;
     }
 
+    private function hello_world(){
+        echo 'Hello World';
+    }
+
     private function seed(){
         if($this->func == "create"){
             $connection='default';
@@ -69,8 +73,7 @@ class CONSOLE {
              */
             $token = $this->getToken(32);
             $fp=fopen(UTILITY_PATH."/Seeds/$token.php",'w');
-            $seed_template = '
-<?php
+            $seed_template = '<?php
 class '.$token.'{
     public $timestamp='.strtotime(date('Y-m-d H:i:s')).';
     public $connection="'.$connection.'";
@@ -100,7 +103,10 @@ class '.$token.'{
             for($i=0; $i<sizeof($seeds); $i++){
                 if(strpos($seeds[$i], '.php')){
                     $class = explode(".php", $seeds[$i])[0];
-                    require_once $dir."/".$seeds[$i];
+                    trim(require_once $dir."/".$seeds[$i]);
+                    // $file = file_get_contents($dir."/".$seeds[$i]);
+                    // $file = substr($file, 3, strlen($file));
+                    // echo trim($file);
                     $seed = new $class();
 
                     $classArr[$seed->timestamp] = $class;
@@ -118,20 +124,18 @@ class '.$token.'{
              */
             $seeded = $this->getSeededSeeds("ASC");
             $seededArr = array_column($seeded, 'seed');
-            $latest = '';
             foreach($classArr as $key=>$value){
                 if(!\in_array($value, $seededArr)){
                     $seed = new $value();
-                    $latest = $value;
                     $queries = $seed->up();
                     for($j=0; $j<sizeof($queries); $j++){
                         $this->alterTable($seed->connection, $queries[$j]);
                     }
+                    echo "Seeding $value... \n";
                     $this->writeMigrateDB($value);
+                    echo "Seeded $value successfully. \n";
                 }
             }
-
-            echo "Seed to $latest successfully...";
         }
 
         else if($this->func == "rollback"){
@@ -146,6 +150,7 @@ class '.$token.'{
                     for($s=0; $s<sizeof($seeded); $s++){
                         if($done === false){
                             $existingSeed = $seeded[$s];
+                            echo "Rolling back $existingSeed... \n";
                             /**
                              * This should be the last rollback
                              * so set done as true
@@ -163,17 +168,18 @@ class '.$token.'{
                                     $this->deleteMigrateDB($existingSeed);
                                 }
                             }
+                            echo "Rolled back to $existingSeed successfully. \n";
                         }else{
                             break;
                         }
                     }
                 }
-                echo "Rollback to $seed successfully...";
             }else if (!empty($this->argv[2]) && strpos($this->argv[2], '--all') !== false) {
                 $seeded = $this->getSeededSeeds("DESC");
                 $seeded = array_column($seeded, 'seed');
                     for($s=0; $s<sizeof($seeded); $s++){
                         $existingSeed = $seeded[$s];
+                        echo "Rolling back $existingSeed... \n";
 
                         require_once $dir."/".$existingSeed.".php";
                         $seedClass = new $existingSeed();
@@ -185,6 +191,7 @@ class '.$token.'{
                                 $this->deleteMigrateDB($existingSeed);
                             }
                         }
+                        echo "Rolled back to $existingSeed successfully. \n";
                     }
             }else{
                 die('Seed ID is needed.');

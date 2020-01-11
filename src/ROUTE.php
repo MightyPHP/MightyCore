@@ -7,6 +7,7 @@ class ROUTE{
     static $routes = [];
     static $namedRoutes = [];
     static $inbound = '';
+    static $match = '';
     private static $secure = false;
     private static $api = false;
     private static $group = false;
@@ -150,6 +151,11 @@ class ROUTE{
              * Set request params accordingly
              */
             REQUEST::setParams($params, $route_data['params']);
+
+            /**
+             * Set the route that is currently matched
+             */
+            ROUTE::$match = $path;
             return $route_data;
         }
 

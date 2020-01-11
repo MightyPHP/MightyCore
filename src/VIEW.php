@@ -111,11 +111,11 @@ class VIEW {
             /**
              * asset() function
              */
-            $assetFunction = new \Twig\TwigFunction('asset', function ($value) {
+            $returnFunction = new \Twig\TwigFunction('asset', function ($value) {
                 include_once(UTILITY_PATH."/Helpers/asset.php");
                 return \asset($value);
             });
-            $twig->addFunction($assetFunction);
+            $twig->addFunction($returnFunction);
 
             if(empty($data)){
                 $data = array();
