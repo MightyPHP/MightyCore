@@ -53,9 +53,6 @@ class APP {
                     putenv($value);
                 }
             }
-    
-            echo getenv("TEST2");
-    
             fclose($envFile);
         }    
     }
