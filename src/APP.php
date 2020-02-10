@@ -49,7 +49,9 @@ class APP {
             $contents = fread($envFile, filesize(DOC_ROOT . ".env"));
             $contents = explode("\n", $contents);
             foreach($contents as $key=>$value){
-                putenv($value);
+                if(!empty($value)){
+                    putenv($value);
+                }
             }
     
             echo getenv("TEST2");
