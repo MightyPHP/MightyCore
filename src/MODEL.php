@@ -31,7 +31,6 @@ class MODEL {
     public $_db = null;
     
     public function __construct($conn = NULL, $db = NULL) {
-        $this->_config = parse_ini_file(__DIR__."/../../../../Configs/databases.ini", true);
         if (!empty($conn)) {
             $this->_conn = $conn;
         } 
@@ -51,19 +50,15 @@ class MODEL {
             $this->_conn->_connect();
             $this->_conn->login($this->_config['_ssh_']['user'], $this->_config['_ssh_']['password']);
         }else{
-            if (isset($this->_config[$db])) {
-                $servername = $this->_config[$db]['servername'];
-                $username = $this->_config[$db]['username'];
-                $password = $this->_config[$db]['password'];
-                $database = $this->_config[$db]['database'];
-                try {
-                    $this->_conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
-                    $this->_conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                } catch (PDOException $e) {
-                    die($e);
-                }
-            } else {
-                throw new Exception('Database does not exist');
+            $servername = env('DB_'.strtoupper($db).'_HOST');
+            $username = env('DB_'.strtoupper($db).'_USERNAME');
+            $password = env('DB_'.strtoupper($db).'_PASSWORD');
+            $database = env('DB_'.strtoupper($db).'_DATABASE');
+            try {
+                $this->_conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
+                $this->_conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            } catch (PDOException $e) {
+                die($e);
             }
         }
         $class = $class . 'Model';
@@ -162,19 +157,15 @@ class MODEL {
     }
 
     public function createSingleInstance($db) {
-        if (isset($this->_config[$db])) {
-            $servername = $this->_config[$db]['servername'];
-            $username = $this->_config[$db]['username'];
-            $password = $this->_config[$db]['password'];
-            $database = $this->_config[$db]['database'];
-            try {
-                $this->_conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
-                $this->_conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            } catch (PDOException $e) {
-                die($e);
-            }
-        } else {
-            throw new Exception('Database does not exist');
+        $servername = env('DB_'.strtoupper($db).'_HOST');
+        $username = env('DB_'.strtoupper($db).'_USERNAME');
+        $password = env('DB_'.strtoupper($db).'_PASSWORD');
+        $database = env('DB_'.strtoupper($db).'_DATABASE');
+        try {
+            $this->_conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $this->_conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            die($e);
         }
 
         return $this->_conn;
