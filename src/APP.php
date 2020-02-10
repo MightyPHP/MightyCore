@@ -23,19 +23,39 @@ class APP {
         }
 
         /**
+         * Get ENV Variables
+         */
+        $this->readEnv();
+        
+        /**
          * Secure the request,
          * then start
          */
         REQUEST::init(REQUEST::secure($request));
 
         $this->_security = new SECURITY();
-        if(env('ENV')=="production"){
+        if(getenv('ENV')=="production"){
             set_error_handler($this->errorHandler());
         }
     }
 
     private function errorHandler(){
         RESPONSE::return('Oops, something is broken.',500);
+    }
+
+    private function readEnv(){
+        if(file_exists ( DOC_ROOT . ".env" )){
+            $envFile = fopen(DOC_ROOT . ".env", "r");
+            $contents = fread($envFile, filesize(DOC_ROOT . ".env"));
+            $contents = explode("\n", $contents);
+            foreach($contents as $key=>$value){
+                putenv($value);
+            }
+    
+            echo getenv("TEST2");
+    
+            fclose($envFile);
+        }    
     }
 
     public function callAPP() {
