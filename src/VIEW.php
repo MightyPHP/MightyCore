@@ -56,9 +56,6 @@ class VIEW {
             $view_file = $this->mapRedirects($view_file);
             $view_file = $this->cleanUpTags($view_file);
         }
-        if(MIGHTY_MODE == 'prod'){
-            $view_file =str_replace(array("\r", "\n"), '', $view_file);        
-        }
 
         if($legacy == true){
             return $view_file;

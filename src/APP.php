@@ -29,7 +29,7 @@ class APP {
         REQUEST::init(REQUEST::secure($request));
 
         $this->_security = new SECURITY();
-        if(MIGHTY_MODE=="prod"){
+        if(env('ENV')=="production"){
             set_error_handler($this->errorHandler());
         }
     }

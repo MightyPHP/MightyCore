@@ -2,11 +2,6 @@
 
 include_once __DIR__.'/../../../../../Configs/config.php';
 
-if(MIGHTY_MODE == 'dev'){
-error_reporting(E_ALL);
-ini_set('display_errors','On');
-}
-
 if (preg_match('/\.(?:png|jpg|jpeg|gif|css|js|woff|woff2|ttf|html|otf|svg)/', $_SERVER["REQUEST_URI"])) {
     return false;   // serve the requested resource as-is.
     //$_SERVER["REQUEST_URI"] .= "/Public";

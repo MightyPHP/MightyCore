@@ -5,7 +5,7 @@ class MIGHTYEXCEPTION extends Exception {
     // Redefine the exception so message isn't optional
     public function __construct($message, $code = 0, Exception $previous = null) {
         // some code
-        if(MIGHTY_MODE == 'prod'){
+        if(env('ENV') == 'production'){
             $message = "An error occured";       
         }else{
             $extend = " Thrown at ".parent::getLine()." from ".parent::getFile();
