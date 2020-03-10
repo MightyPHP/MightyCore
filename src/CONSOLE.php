@@ -221,123 +221,101 @@ class '.$token.'{
 
     private function getSeededSeeds($mode){
         $db = 'default';
-        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
-        if (isset($config[$db])) {
-            $servername = $config[$db]['servername'];
-            $username = $config[$db]['username'];
-            $password = $config[$db]['password'];
-            $database = $config[$db]['database'];
-            try {
-                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
-                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                $stmt = $db->prepare("SHOW TABLES LIKE 'seeds'");
+        $servername = env('DB_'.strtoupper($db).'_HOST');
+        $username = env('DB_'.strtoupper($db).'_USERNAME');
+        $password = env('DB_'.strtoupper($db).'_PASSWORD');
+        $database = env('DB_'.strtoupper($db).'_DATABASE');
+        try {
+            $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $stmt = $db->prepare("SHOW TABLES LIKE 'seeds'");
+            $stmt->execute();
+            $data = $stmt->fetch(\PDO::FETCH_OBJ);
+            
+            /**
+             * Check if SEEDS table exist
+             * if yes, select them seeds
+             */
+            if($data !== false){
+                $stmt = $db->prepare("SELECT seed FROM seeds ORDER BY id $mode");
                 $stmt->execute();
-                $data = $stmt->fetch(\PDO::FETCH_OBJ);
-                
-                /**
-                 * Check if SEEDS table exist
-                 * if yes, select them seeds
-                 */
-                if($data !== false){
-                    $stmt = $db->prepare("SELECT seed FROM seeds ORDER BY id $mode");
-                    $stmt->execute();
-                    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC); 
-                    return $data;
-                }else{
-                    return [];
-                }
-
-
-            } catch (PDOException $e) {
-                die($e);
+                $data = $stmt->fetchAll(\PDO::FETCH_ASSOC); 
+                return $data;
+            }else{
+                return [];
             }
-        } else {
-            throw new Exception('Database does not exist');
+        } catch (PDOException $e) {
+            die($e);
         }
     }
 
     private function alterTable($db, $query){
-        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
-        if (isset($config[$db])) {
-            $servername = $config[$db]['servername'];
-            $username = $config[$db]['username'];
-            $password = $config[$db]['password'];
-            $database = $config[$db]['database'];
-            try {
-                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
-                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                $stmt = $db->prepare($query);
-                $stmt->execute();
-            } catch (PDOException $e) {
-                die($e);
-            }
-        } else {
-            throw new Exception('Database does not exist');
+        $servername = env('DB_'.strtoupper($db).'_HOST');
+        $username = env('DB_'.strtoupper($db).'_USERNAME');
+        $password = env('DB_'.strtoupper($db).'_PASSWORD');
+        $database = env('DB_'.strtoupper($db).'_DATABASE');
+        try {
+            $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            die($e);
         }
     }
 
     private function deleteMigrateDB($token){
         $db = 'default';
-        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
-        if (isset($config[$db])) {
-            $servername = $config[$db]['servername'];
-            $username = $config[$db]['username'];
-            $password = $config[$db]['password'];
-            $database = $config[$db]['database'];
-            try {
-                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
-                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                
-                $stmt = $db->prepare("DELETE FROM `seeds` WHERE seed='$token';");
-                $stmt->execute();
-            } catch (PDOException $e) {
-                die($e);
-            }
-        } else {
-            throw new Exception('Database does not exist');
+        $servername = env('DB_'.strtoupper($db).'_HOST');
+        $username = env('DB_'.strtoupper($db).'_USERNAME');
+        $password = env('DB_'.strtoupper($db).'_PASSWORD');
+        $database = env('DB_'.strtoupper($db).'_DATABASE');
+        try {
+            $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            
+            $stmt = $db->prepare("DELETE FROM `seeds` WHERE seed='$token';");
+            $stmt->execute();
+        } catch (PDOException $e) {
+            die($e);
         }
     }
 
     private function writeMigrateDB($token){
         $db = 'default';
-        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
-        if (isset($config[$db])) {
-            $servername = $config[$db]['servername'];
-            $username = $config[$db]['username'];
-            $password = $config[$db]['password'];
-            $database = $config[$db]['database'];
-            try {
-                $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
-                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                $stmt = $db->prepare("SHOW TABLES LIKE 'seeds'");
+        $servername = env('DB_'.strtoupper($db).'_HOST');
+        $username = env('DB_'.strtoupper($db).'_USERNAME');
+        $password = env('DB_'.strtoupper($db).'_PASSWORD');
+        $database = env('DB_'.strtoupper($db).'_DATABASE');
+        try {
+            $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $stmt = $db->prepare("SHOW TABLES LIKE 'seeds'");
+            $stmt->execute();
+            $data = $stmt->fetch(\PDO::FETCH_OBJ);
+            
+            /**
+             * Check if SEEDS table exist
+             * if not, create
+             */
+            if($data === false){
+                $stmt = $db->prepare("CREATE TABLE seeds (
+                    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    seed VARCHAR(32) NOT NULL,
+                    created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    modified_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    )");
                 $stmt->execute();
-                $data = $stmt->fetch(\PDO::FETCH_OBJ);
-                
-                /**
-                 * Check if SEEDS table exist
-                 * if not, create
-                 */
-                if($data === false){
-                    $stmt = $db->prepare("CREATE TABLE seeds (
-                        id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                        seed VARCHAR(32) NOT NULL,
-                        created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        modified_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                        )");
-                    $stmt->execute();
-                }
-
-                /**
-                 * Insert into DB
-                 */
-                $stmt = $db->prepare("INSERT INTO seeds (seed)
-                                        VALUES ('$token')");
-                $stmt->execute();
-            } catch (PDOException $e) {
-                die($e);
             }
-        } else {
-            throw new Exception('Database does not exist');
+
+            /**
+             * Insert into DB
+             */
+            $stmt = $db->prepare("INSERT INTO seeds (seed)
+                                    VALUES ('$token')");
+            $stmt->execute();
+        } catch (PDOException $e) {
+            die($e);
         }
     }
 
