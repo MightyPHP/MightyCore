@@ -1,8 +1,20 @@
 <?php
+if(file_exists ( DOC_ROOT . ".env" )){
+  $envFile = fopen(DOC_ROOT . ".env", "r");
+  $contents = fread($envFile, filesize(DOC_ROOT . ".env"));
+  $contents = explode("\n", $contents);
+  foreach($contents as $key=>$value){
+      if(!empty($value)){
+          putenv($value);
+      }
+  }
+  fclose($envFile);
+}
 
 function env($env, $default=false){
   if(getenv($env)){
     $env = getenv($env);
+    echo $env;
     if(preg_match('/^(["\']).*\1$/m', $env)){
       $env = str_replace('"', '', $env);
       $env = str_replace("'", '', $env);

@@ -25,7 +25,7 @@ class APP {
         /**
          * Get ENV Variables
          */
-        $this->readEnv();
+        // $this->readEnv();
         
         /**
          * Secure the request,
