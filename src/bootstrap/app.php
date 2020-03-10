@@ -14,7 +14,6 @@ if(file_exists ( DOC_ROOT . ".env" )){
 function env($env, $default=false){
   if(getenv($env)){
     $env = getenv($env);
-    echo $env;
     if(preg_match('/^(["\']).*\1$/m', $env)){
       $env = str_replace('"', '', $env);
       $env = str_replace("'", '', $env);
