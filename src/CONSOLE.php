@@ -1,5 +1,6 @@
 <?php
 namespace MightyCore;
+require __DIR__ . '/bootstrap/app.php';
 class CONSOLE {
     private $func;
     private $argv;
@@ -203,21 +204,18 @@ class '.$token.'{
 
     private function getDefaultDB(){
         $db = 'default';
-        $config = parse_ini_file(CONFIG_PATH."/databases.ini", true);
-        if (isset($config[$db])) {
-            $servername = $config[$db]['servername'];
-            $username = $config[$db]['username'];
-            $password = $config[$db]['password'];
-            $database = $config[$db]['database'];
-            try {
-                $db = new \PDO("mysql:host=$servername", $username, $password);
-                $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                $stmt = $db->prepare("CREATE DATABASE IF NOT EXISTS $database;");
-                $stmt->execute();
-                return true;
-            } catch (PDOException $e) {
-                die($e);
-            }
+        $servername = env('DB_'.strtoupper($db).'_HOST');
+        $username = env('DB_'.strtoupper($db).'_USERNAME');
+        $password = env('DB_'.strtoupper($db).'_PASSWORD');
+        $database = env('DB_'.strtoupper($db).'_DATABASE');
+        try {
+            $db = new \PDO("mysql:host=$servername", $username, $password);
+            $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $stmt = $db->prepare("CREATE DATABASE IF NOT EXISTS $database;");
+            $stmt->execute();
+            return true;
+        } catch (PDOException $e) {
+            die($e);
         }
     }
 
