@@ -107,7 +107,10 @@ class APP {
             /**If method exists, else return 404 */
             if (method_exists($this->class, $route['method'])) {
                 $func = $route['method'];
-                $this->class->$func();
+                $return = $this->class->$func();
+                if(!empty($return)){
+                    RESPONSE::return($return);
+                }
             } else {
                 RESPONSE::return('Not found', 404);
                 exit;

@@ -18,6 +18,20 @@ class RESPONSE{
         }
     }
 
+    public static function make($data, $status = 200){
+        header("HTTP/1.1 " . $status . " " . RESPONSE::_requestStatus($status));
+        if (is_array($data)) {
+            $data = json_encode($data);
+        }
+
+        if($status !== 200){ 
+            include "status_response/template.php";
+            exit; 
+        }else{
+            return $data;
+        }
+    }
+
     private static function _requestStatus($code) {
         $status = array(
             200 => 'OK',
