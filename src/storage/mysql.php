@@ -241,7 +241,7 @@ class STORAGE{
             $this->_params[] = $value;
         }
         // Insert timestamp
-        $insertQuery .= " ,".DB_CREATED_DT_COL." ";
+        $insertQuery .= " ,".$this->table.".".DB_CREATED_DT_COL." ";
         $inserQueryValue .= " ,? ";
         $this->_params[] = MOMENT::now()->toDateTimeString();
 
