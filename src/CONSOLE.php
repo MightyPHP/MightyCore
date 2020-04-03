@@ -64,7 +64,6 @@ class CONSOLE {
 
     private function seed(){
         if($this->func == "create"){
-            // print_r($this->argv); die();
             $connection='default';
             if (empty($this->argv[2])) {
                 echo 'Please provide a seed name.'; die();

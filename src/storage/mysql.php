@@ -56,7 +56,6 @@ class STORAGE
             $this->t_modified_dt = $model->modified_dt;
             $this->t_with_timestamp = $model->timestamps;
         }
-        die();
     }
 
     private function execute()
