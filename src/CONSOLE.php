@@ -64,18 +64,30 @@ class CONSOLE {
 
     private function seed(){
         if($this->func == "create"){
+            // print_r($this->argv); die();
             $connection='default';
-            if (!empty($this->argv[2]) && strpos($this->argv[2], '--connection=') !== false) {
-                $connection = substr($this->argv[2],13);
+            if (empty($this->argv[2])) {
+                echo 'Please provide a seed name.'; die();
+            }else{
+                if(strpos($this->argv[2], '--') !== false){
+                    echo 'Please provide a seed name.'; die();
+                }
+                $name = $this->argv[2];
+            }
+            foreach($this->argv as $arg){
+                if (strpos($arg, '--connection=') !== false) {
+                    $connection = substr($arg,13);
+                }
             }
 
             /**
              * Writes the template file
              */
-            $token = $this->getToken(32);
-            $fp=fopen(UTILITY_PATH."/Seeds/$token.php",'w');
+            $token = $this->getToken(12);
+            $filename = '_'.date('Y_m_d').'_'.$name.'_'.$token;
+            $fp=fopen(UTILITY_PATH."/Seeds/$filename.php",'w');
             $seed_template = '<?php
-class '.$token.'{
+class '.$filename.'{
     public $timestamp='.strtotime(date('Y-m-d H:i:s')).';
     public $connection="'.$connection.'";
     public function up(){
@@ -93,7 +105,7 @@ class '.$token.'{
             ';
             fwrite($fp, "$seed_template");
             fclose($fp);
-            echo "Seed $token created successfully in ".UTILITY_PATH."/Seeds";
+            echo "Seed $filename created successfully in ".UTILITY_PATH."/Seeds";
         }
 
         else if($this->func == "plant"){
