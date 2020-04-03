@@ -23,7 +23,14 @@ class MODEL {
      * Database connection type
      */
     protected $_connType = DATABASE_CONNECTION_TYPE;
-    
+
+    /**
+     * Timestamp properties
+     */
+    public $created_dt = DB_CREATED_DT_COL;
+    public $modified_dt = DB_MODIFIED_DT_COL;
+    public $timestamps = true;
+
     /**
      * Property: project database
      * Stores the database connection config index

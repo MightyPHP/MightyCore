@@ -1,7 +1,11 @@
 <?php
+
 namespace MightyCore;
+
 use PDO;
-class STORAGE{
+
+class STORAGE
+{
     private $db = null;
     private $table = null;
     public static $_this = null;
@@ -20,7 +24,14 @@ class STORAGE{
     private $_order = '';
     private $_params = array();
     private $_updateParams = array();
-    
+
+    /**
+     * Timestamps
+     */
+    private $t_created_dt = DB_CREATED_DT_COL;
+    private $t_modified_dt = DB_MODIFIED_DT_COL;
+    private $t_with_timestamp = true;
+
     public $_comparisonOperators = [
         '=',
         '<',
@@ -31,19 +42,32 @@ class STORAGE{
         '!='
     ];
 
-    private function __construct($db, $table) {
+    private function __construct($db, $table)
+    {
         $this->db = $db;
         $this->table = $table;
+
+        $model = str_replace(' ', '', ucwords(str_replace('_', ' ', $table)));
+        $model[0] = strtolower($model[0]);
+        $model = $model . 'Model';
+        if (class_exists($model)) {
+            $model = new $model();
+            $this->t_created_dt = $model->created_dt;
+            $this->t_modified_dt = $model->modified_dt;
+            $this->t_with_timestamp = $model->timestamps;
+        }
+        die();
     }
 
-    private function execute(){
+    private function execute()
+    {
         $query = $this->queryBuilder();
-        if($this->log){
+        if ($this->log) {
             $toLog = array(
                 'query' => $query,
                 'params' => $this->_params
             );
-            UTIL::log($toLog,'Storage');
+            UTIL::log($toLog, 'Storage');
         }
         $query = $this->db->prepare($query);
         $query->execute($this->_params);
@@ -53,11 +77,12 @@ class STORAGE{
     /**
      * Init the DB object
      */
-    public static function store($table, $db='default'){
-        $servername = env('DB_'.strtoupper($db).'_HOST');
-        $username = env('DB_'.strtoupper($db).'_USERNAME');
-        $password = env('DB_'.strtoupper($db).'_PASSWORD');
-        $database = env('DB_'.strtoupper($db).'_DATABASE');
+    public static function store($table, $db = 'default')
+    {
+        $servername = env('DB_' . strtoupper($db) . '_HOST');
+        $username = env('DB_' . strtoupper($db) . '_USERNAME');
+        $password = env('DB_' . strtoupper($db) . '_PASSWORD');
+        $database = env('DB_' . strtoupper($db) . '_DATABASE');
         try {
             $db = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -65,9 +90,10 @@ class STORAGE{
         } catch (PDOException $e) {
             die($e);
         }
-    } 
+    }
 
-    public function log(){
+    public function log()
+    {
         $this->log = true;
         return $this;
     }
@@ -75,24 +101,25 @@ class STORAGE{
     /**
      * For helper functions not using query builder
      */
-    private function query($mode, $query, $param){
-        if($this->log){
+    private function query($mode, $query, $param)
+    {
+        if ($this->log) {
             $toLog = array(
                 'query' => $query,
                 'params' => $param
             );
-            UTIL::log($toLog,'Storage');
+            UTIL::log($toLog, 'Storage');
         }
         $query = $this->db->prepare($query);
         $query->execute($param);
-        if($mode == 'select'){
+        if ($mode == 'select') {
             return $query->fetchObject();
         }
-        if($mode == 'insert'){
+        if ($mode == 'insert') {
             return $this->db->lastInsertId();
-        } 
+        }
 
-        if($mode == 'update'){
+        if ($mode == 'update') {
             return $this->db->lastInsertId();
         }
     }
@@ -102,7 +129,8 @@ class STORAGE{
      * 
      * @return array The query fetch objects in array
      */
-    public function get(){
+    public function get()
+    {
         return $this->execute()->fetchAll(PDO::FETCH_OBJ);
     }
 
@@ -111,7 +139,8 @@ class STORAGE{
      * 
      * @return array The query fetch results in associative array
      */
-    public function getArr(){
+    public function getArr()
+    {
         return $this->execute()->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -120,7 +149,8 @@ class STORAGE{
      * 
      * @return object The query fetch object
      */
-    public function getOne(){
+    public function getOne()
+    {
         return $this->execute()->fetch(PDO::FETCH_OBJ);
     }
 
@@ -129,32 +159,37 @@ class STORAGE{
      * 
      * @param array Associative array with column to value set for update query
      */
-    public function update($update){
+    public function update($update)
+    {
         $this->mode = 'update';
         $updateQuery = '';
         // var_dump($update);
-        foreach($update as $key=>$value){
-            if($updateQuery !== ""){
+        foreach ($update as $key => $value) {
+            if ($updateQuery !== "") {
                 $updateQuery .= ",";
             }
             $updateQuery .= " $key = ? ";
             $this->_updateParams[] = $value;
         }
         // Update timestamp
-        $updateQuery .= " ,".$this->table.".".DB_MODIFIED_DT_COL."='".MOMENT::now()->toDateTimeString()."' ";
-        $this->_main = "UPDATE $this->table ".$this->_join." SET $updateQuery";
+        if($this->t_with_timestamp){
+            $updateQuery .= " ," . $this->table . "." . $this->t_modified_dt . "='" . MOMENT::now()->toDateTimeString() . "' ";
+        }
+        
+        $this->_main = "UPDATE $this->table " . $this->_join . " SET $updateQuery";
         $this->execute();
     }
 
     /**
      * Query builder
      */
-    private function queryBuilder(){
-        if($this->mode == 'update'){
+    private function queryBuilder()
+    {
+        if ($this->mode == 'update') {
             $this->_params = array_merge($this->_updateParams, $this->_params);
-            $query = $this->_main." ".$this->_where." ".$this->_group." ".$this->_order;
-        }else{
-            $query = $this->_main." ".$this->_join." ".$this->_where." ".$this->_group." ".$this->_order;
+            $query = $this->_main . " " . $this->_where . " " . $this->_group . " " . $this->_order;
+        } else {
+            $query = $this->_main . " " . $this->_join . " " . $this->_where . " " . $this->_group . " " . $this->_order;
         }
         return $query;
     }
@@ -164,7 +199,8 @@ class STORAGE{
      * Helper functions
      * CREATE
      */
-    public function create($data, $ifExistFail = false){
+    public function create($data, $ifExistFail = false)
+    {
         $whereQuery = '';
         $selectParam = array();
         $setQuery = '';
@@ -172,21 +208,21 @@ class STORAGE{
         $inserQueryValue = '';
 
         $setParam = array();
-        foreach($data as $key=>$value){ 
-            if($key[0] !== "*"){
-                if($whereQuery !== ''){
+        foreach ($data as $key => $value) {
+            if ($key[0] !== "*") {
+                if ($whereQuery !== '') {
                     $whereQuery .= " AND ";
                 }
                 $whereQuery .= " $key=? ";
                 $selectParam[] = $value;
-            }            
+            }
 
             /**Now we allow for asterisks parameters to go through for UPDATE/CREATE */
-            if($key[0] == "*"){
+            if ($key[0] == "*") {
                 /**But first, we remove the asterisk */
-                $key = substr($key,1,strlen($key));
+                $key = substr($key, 1, strlen($key));
             }
-            if($setQuery !== ''){
+            if ($setQuery !== '') {
                 $setQuery .= " , ";
                 $insertQuery .= " , ";
                 $inserQueryValue .= " , ";
@@ -197,29 +233,31 @@ class STORAGE{
             $setParam[] = $value;
         }
         $selectResult = array();
-        if(!empty($whereQuery)){
+        if (!empty($whereQuery)) {
             $query = "SELECT COUNT(*) as count FROM $this->table WHERE $whereQuery";
-            $selectResult = $this->query('select',$query, $selectParam);
+            $selectResult = $this->query('select', $query, $selectParam);
         }
 
-        if(!empty($selectResult) && $selectResult->count > 0){
+        if (!empty($selectResult) && $selectResult->count > 0) {
             /**Update */
-            if($ifExistFail){ return false; }
+            if ($ifExistFail) {
+                return false;
+            }
             // Update the datetime
-            $setQuery .= " ,".DB_MODIFIED_DT_COL."=? ";
+            $setQuery .= " ," . DB_MODIFIED_DT_COL . "=? ";
             $setParam[] = MOMENT::now()->toDateTimeString();
             $query = "UPDATE $this->table SET $setQuery WHERE $whereQuery";
-            return $this->query('update',$query, array_merge($setParam, $selectParam));
-        }else{
+            return $this->query('update', $query, array_merge($setParam, $selectParam));
+        } else {
             /**Create */
-            $insertQuery .= " , ".DB_CREATED_DT_COL." ";
-            $insertQuery .= " , ".DB_MODIFIED_DT_COL." ";
+            $insertQuery .= " , " . DB_CREATED_DT_COL . " ";
+            $insertQuery .= " , " . DB_MODIFIED_DT_COL . " ";
             $inserQueryValue .= ", ? ";
             $inserQueryValue .= ", ? ";
             $setParam[] = MOMENT::now()->toDateTimeString();
             $setParam[] = MOMENT::now()->toDateTimeString();
             $query = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
-            return $this->query('insert',$query, $setParam);
+            return $this->query('insert', $query, $setParam);
         }
     }
 
@@ -228,11 +266,12 @@ class STORAGE{
      * 
      * @return integer The last insert ID
      */
-    public function insert($args){
+    public function insert($args)
+    {
         $insertQuery = '';
         $inserQueryValue = '';
-        foreach($args as $key=>$value){
-            if($insertQuery !== ""){
+        foreach ($args as $key => $value) {
+            if ($insertQuery !== "") {
                 $insertQuery .= ",";
                 $inserQueryValue .= ",";
             }
@@ -241,9 +280,14 @@ class STORAGE{
             $this->_params[] = $value;
         }
         // Insert timestamp
-        $insertQuery .= " ,".$this->table.".".DB_CREATED_DT_COL." ";
-        $inserQueryValue .= " ,? ";
-        $this->_params[] = MOMENT::now()->toDateTimeString();
+        if($this->t_with_timestamp){
+            $insertQuery .= " ," . $this->table . "." . $this->t_created_dt . " ";
+            $insertQuery .= " ," . $this->table . "." . $this->t_modified_dt . " ";
+            $inserQueryValue .= " ,? ";
+            $inserQueryValue .= " ,? ";
+            $this->_params[] = MOMENT::now()->toDateTimeString();
+            $this->_params[] = MOMENT::now()->toDateTimeString();
+        }
 
         $this->_main = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
         $this->execute();
@@ -255,12 +299,13 @@ class STORAGE{
      * 
      * @return object
      */
-    public function select(){
+    public function select()
+    {
         $args = func_get_args();
         $this->_main = "SELECT ";
         $index = 0;
-        foreach($args as $key=>$value){
-            if($index>0){
+        foreach ($args as $key => $value) {
+            if ($index > 0) {
                 $this->_main .= ",";
             }
             $this->_main .= " $value ";
@@ -270,30 +315,31 @@ class STORAGE{
         return $this;
     }
 
-    private function whereProcessor($args,$type){
+    private function whereProcessor($args, $type)
+    {
         $first = false;
-        if($this->_where == ""){
+        if ($this->_where == "") {
             $first = true;
             $this->_where = " WHERE ";
         }
         $index = 0;
-        foreach($args as $key=>$value){
-            if($index == 0){
-                if($first === false){
+        foreach ($args as $key => $value) {
+            if ($index == 0) {
+                if ($first === false) {
                     $this->_where .= " $type ";
                 }
                 $this->_where .= " $value ";
             }
-            if($index == 1){
+            if ($index == 1) {
                 //check for operations
-                if(\in_array($value, $this->_comparisonOperators)){
+                if (\in_array($value, $this->_comparisonOperators)) {
                     $this->_where .= " $value ";
-                }else{
+                } else {
                     $this->_where .= " =? ";
                     $this->_params[] = $value;
                 }
             }
-            if($index == 2){
+            if ($index == 2) {
                 $this->_where .= " ? ";
                 $this->_params[] = $value;
             }
@@ -305,12 +351,14 @@ class STORAGE{
     /**
      * Generates the where query
      */
-    public function where(){
-        return $this->whereProcessor(func_get_args(),'AND');
+    public function where()
+    {
+        return $this->whereProcessor(func_get_args(), 'AND');
     }
 
-    public function orWhere(){
-        return $this->whereProcessor(func_get_args(),'OR');
+    public function orWhere()
+    {
+        return $this->whereProcessor(func_get_args(), 'OR');
     }
 
     /**
@@ -318,11 +366,12 @@ class STORAGE{
      * 
      * accepts raw where queries for AND
      */
-    public function whereRaw($raw){
-        if($this->_where == ""){
+    public function whereRaw($raw)
+    {
+        if ($this->_where == "") {
             $this->_where = " WHERE ";
             $this->_where .= " $raw ";
-        }else{
+        } else {
             $this->_where .= " AND $raw ";
         }
         return $this;
@@ -333,73 +382,80 @@ class STORAGE{
      * 
      * accepts raw where queries for OR
      */
-    public function orWhereRaw($raw){
-        if($this->_where == ""){
+    public function orWhereRaw($raw)
+    {
+        if ($this->_where == "") {
             $this->_where = " WHERE ";
             $this->_where .= " $raw ";
-        }else{
+        } else {
             $this->_where .= " OR $raw ";
         }
         return $this;
     }
 
-    public function orderBy(){
+    public function orderBy()
+    {
         $args = func_get_args();
         $first = false;
-        if($this->_order == ""){
+        if ($this->_order == "") {
             $first = true;
             $this->_order = " ORDER BY ";
         }
-        for($i=0; $i<sizeof($args); $i++){
-            if($i == 0){
-                if($first === false){
+        for ($i = 0; $i < sizeof($args); $i++) {
+            if ($i == 0) {
+                if ($first === false) {
                     $this->_order .= ",";
                 }
                 $this->_order .= " $args[$i] ";
             }
-            if($i == 1){
+            if ($i == 1) {
                 $this->_order .= " $args[$i] ";
             }
         }
         return $this;
     }
 
-    public function groupBy($group){
-        if($this->_group == ''){
+    public function groupBy($group)
+    {
+        if ($this->_group == '') {
             $this->_group .= " GROUP BY ";
             $this->_group .= " $group ";
-        }else{
+        } else {
             $this->_group .= ", $group ";
         }
-        
+
         return $this;
     }
 
-    public function innerJoin(){
+    public function innerJoin()
+    {
         $args = func_get_args();
         $this->joinProcessor('INNER JOIN', $args);
         return $this;
     }
 
-    public function leftJoin(){
+    public function leftJoin()
+    {
         $args = func_get_args();
         $this->joinProcessor('LEFT JOIN', $args);
         return $this;
     }
 
-    public function outerJoin(){
+    public function outerJoin()
+    {
         $args = func_get_args();
         $this->joinProcessor('OUTER JOIN', $args);
         return $this;
     }
 
-    private function joinProcessor($mode, $args){
+    private function joinProcessor($mode, $args)
+    {
         $this->_join .= " $mode $args[0] ON $args[1] $args[2] $args[3] ";
     }
 
-    public static function close(){
+    public static function close()
+    {
         STORAGE::$db = null;
         STORAGE::$table = null;
     }
 }
-?>
