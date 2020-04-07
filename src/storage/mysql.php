@@ -314,6 +314,11 @@ class STORAGE
         return $this;
     }
 
+    public function delete(){
+        $this->_main = "DELETE FROM $this->table ";
+        $this->execute();
+    }
+
     private function whereProcessor($args, $type)
     {
         $first = false;
