@@ -312,7 +312,7 @@ class '.$filename.'{
             if($data === false){
                 $stmt = $db->prepare("CREATE TABLE seeds (
                     id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                    seed VARCHAR(32) NOT NULL,
+                    seed VARCHAR(255) NOT NULL,
                     created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     modified_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                     )");
