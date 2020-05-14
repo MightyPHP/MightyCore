@@ -336,7 +336,7 @@ class STORAGE
             }
             if ($index == 1) {
                 //check for operations
-                if (\in_array($value, $this->_comparisonOperators)) {
+                if (\in_array($value, $this->_comparisonOperators) && !is_int($value)) {
                     $this->_where .= " $value ";
                 } else {
                     $this->_where .= " =? ";
