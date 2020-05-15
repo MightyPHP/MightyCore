@@ -46,7 +46,7 @@ class STORAGE
     {
         $this->db = $db;
         $this->table = $table;
-
+        $this->main = "SELECT * FROM $table ";
         $model = str_replace(' ', '', ucwords(str_replace('_', ' ', $table)));
         $model[0] = strtolower($model[0]);
         $model = $model . 'Model';
