@@ -41,6 +41,19 @@ function trans($data){
 }
 
 /**
+ * Global View function
+ * 
+ * @param string $view
+ * @param string $template
+ * 
+ * @return string
+ */
+function view($view, $data) {
+  $class = new \MightyCore\VIEW($view);
+  return $class->render($data);
+}
+
+/**
  * Grab ENV value
  * 
  * @param string  $env   The env key to obtain

@@ -17,9 +17,9 @@ class CONTROLLER {
 
     protected function _view($view, $template = null) {
         if (!empty($template)) {
-            return new VIEW($this, $view, $template);
+            return new VIEW($view, $template);
         } else {
-            return new VIEW($this, $view);
+            return new VIEW($view);
         }
     }
 

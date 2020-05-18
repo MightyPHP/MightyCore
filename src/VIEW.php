@@ -7,8 +7,7 @@ class VIEW {
     protected $_controller;
     protected $_legacy=false;
 
-    public function __construct($controller, $view, $template = NULL, $templateData = NULL) {
-        $this->_controller = $controller;
+    public function __construct($view, $template = NULL, $templateData = NULL) {
         $this->_view = $view;
         $this->_template = $template;
         $this->_templateData = $templateData;
