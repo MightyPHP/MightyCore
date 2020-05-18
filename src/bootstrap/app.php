@@ -1,10 +1,5 @@
 <?php
 /**
- * To set default time zone
- */
-date_default_timezone_set(DEFAULT_TIMEZONE);
-
-/**
  * This part loads the .env values into putenv
  * Critical to run first, else env() method will not return any value
  */
@@ -71,3 +66,8 @@ function env($env, $default=false){
     }
   }
 }
+
+/**
+ * To set default time zone
+ */
+date_default_timezone_set(defined('DEFAULT_TIMEZONE') ?? env('DEFAULT_TIMEZONE'));
