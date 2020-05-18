@@ -115,7 +115,7 @@ class APP {
                 RESPONSE::return('Not found', 404);
                 exit;
             }
-        }catch(Exception $e){
+        }catch(\Exception $e){
             UTIL::log($e->getMessage(), 'Error');
         }
     }

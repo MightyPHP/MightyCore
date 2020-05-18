@@ -63,7 +63,7 @@ class REQUEST{
             } else if ($_SERVER['HTTP_X_HTTP_METHOD'] == 'PUT') {
                 REQUEST::$method = 'PUT';
             } else {
-                throw new Exception("Unexpected Header");
+                throw new \Exception("Unexpected Header");
             }
         }
     }
