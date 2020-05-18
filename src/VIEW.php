@@ -100,8 +100,8 @@ class VIEW {
             /**
              * return() function
              */
-            $returnFunction = new \Twig\TwigFunction('return', function ($value) {
-                return new \Twig_Markup($this->mapControllers($value), "utf-8");
+            $returnFunction = new \Twig\TwigFunction('return', function ($value, $args=[]) {
+                return new \Twig_Markup($this->mapControllers($value, $args), "utf-8");
             });
             $twig->addFunction($returnFunction);
 
@@ -225,7 +225,8 @@ class VIEW {
         }
     }
 
-    private function mapControllers($scope) {
+    private function mapControllers($scope, $args) {
+        $args = implode(",", $args);
         $scope = explode("@",$scope);
         $controller_class = $scope[0]."Controller";
         $func = $scope[1];
@@ -245,7 +246,7 @@ class VIEW {
 
         /**If method exists, else return 404 */
         if (method_exists($class, $func)) {
-            return $class->$func();
+            return $class->$func($args);
         } else {
             return false;
         }
