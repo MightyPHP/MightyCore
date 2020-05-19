@@ -1,4 +1,6 @@
 <?php
+include_once __DIR__.'/../../../../../Configs/config.php';
+require __DIR__ . '/../../../../autoload.php';
 /**
  * This part loads the .env values into putenv
  * Critical to run first, else env() method will not return any value
@@ -83,4 +85,37 @@ function env($env, $default=false){
 /**
  * To set default time zone
  */
-date_default_timezone_set(defined('DEFAULT_TIMEZONE') ?? env('DEFAULT_TIMEZONE'));
+date_default_timezone_set(env('DEFAULT_TIMEZONE'));
+
+if(env('ENV') == 'develop'){
+  ini_set('display_errors','On');
+  ini_set('html_errors',true);
+  error_reporting(E_ALL);
+}else if(env('ENV') == 'production'){
+  //Do not display error for security reasons
+  ini_set('display_errors','Off');
+}
+
+// spl_autoload_register(function($class_name) {
+//   $file = CONTROLLER_PATH . '/' . $class_name . '.php';
+//   if (file_exists($file)) {
+//       require_once $file;
+//   }
+// });
+// spl_autoload_register(function($class_name) {
+//   $file = MODEL_PATH . '/' . $class_name . '.php';
+//   if (file_exists($file)) {
+//       require_once $file;
+//   }
+// });
+// spl_autoload_register(function($class_name) {
+//   $file = MIDDLEWARE_PATH . '/' . $class_name . '.php';
+//   if (file_exists($file)) {
+//       require_once $file;
+//   }
+// });
+
+// Requests from the same server don't have a HTTP_ORIGIN header
+if (!array_key_exists('HTTP_ORIGIN', $_SERVER) && !empty($_SERVER['SERVER_NAME'])) {
+  $_SERVER['HTTP_ORIGIN'] = $_SERVER['SERVER_NAME'];
+}

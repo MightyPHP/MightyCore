@@ -22,13 +22,13 @@ class MODEL {
      * Property: constant
      * Database connection type
      */
-    protected $_connType = DATABASE_CONNECTION_TYPE;
+    protected $_connType = 'default';
 
     /**
      * Timestamp properties
      */
-    public $created_dt = DB_CREATED_DT_COL;
-    public $modified_dt = DB_MODIFIED_DT_COL;
+    public $created_dt = 'created_dt';
+    public $modified_dt = 'modified_dt';
     public $timestamps = true;
 
     /**
@@ -64,7 +64,7 @@ class MODEL {
             try {
                 $this->_conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
                 $this->_conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            } catch (PDOException $e) {
+            } catch (\PDOException $e) {
                 die($e);
             }
         }

@@ -71,7 +71,7 @@ class APP {
                 /**Start to administer middleware */
                 if($route['middleware']){
                     foreach($route['middleware'] as $k=>$v){
-                        $v = $v."Middleware";
+                        $v = "Application\\Middlewares\\".str_replace('/', '\\', $v)."Middleware";
                         $this_middleware = new $v();
                         $this_middleware->administer();
                         //TODO: if middleware not found?
@@ -87,21 +87,14 @@ class APP {
             }
             
             /**Setting the controller class */
-            $controller_class = $route['controller'] . "Controller";
-            
+            $controller_class = 'Application\\Controllers\\'. str_replace('/', '\\', $route['controller']) . "Controller";
+
             /**If controller exists, else return 404 */
             if (class_exists($controller_class)) {
                 $this->class = new $controller_class();
             }else{
-                /**Try to include the file again with sub path */
-                include_once CONTROLLER_PATH.'/'.$controller_class.'.php';
-                $controller_class = explode("/", $controller_class)[1];
-                if (class_exists($controller_class)) {
-                    $this->class = new $controller_class();
-                }else{
-                    RESPONSE::return('Not found', 404);
-                    exit;
-                }
+                RESPONSE::return('Not found', 404);
+                exit;
             }
 
             /**If method exists, else return 404 */
