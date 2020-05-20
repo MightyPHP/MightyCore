@@ -1,227 +1,389 @@
 <?php
 
-
 namespace MightyCore;
+
 use PDO;
 
-class MODEL {
+class MODEL
+{
+    private $db = null;
 
     /**
-     * Property: config array
-     * Stores config data of the database
+     * Stores the table name.
+     *
+     * @var string
      */
-    protected $_config = Null;
+    protected $table = null;
 
     /**
-     * Property: project database
-     * Stores the database object connection
+     * Stores the connection name.
+     *
+     * @var string
      */
-    protected $_conn = '';
+    protected $connection = 'default';
 
     /**
-     * Property: constant
-     * Database connection type
+     * To set the current query mode
+     * Currently only used by update()
+     *
+     * @var string
      */
-    protected $_connType = 'default';
+    private $mode = '';
+    private $log = false;
 
     /**
-     * Timestamp properties
+     * Query Builder Params
+     * 
      */
-    public $created_dt = 'created_dt';
-    public $modified_dt = 'modified_dt';
-    public $timestamps = true;
+    private $_main = '';
+    private $_join = '';
+    private $_where = '';
+    private $_group = '';
+    private $_order = '';
+    private $_params = array();
+    private $_updateParams = array();
 
     /**
-     * Property: project database
-     * Stores the database connection config index
+     * Stores the permitted SQL operators
+     *
+     * @var array
      */
-    public $_db = null;
-    
-    public function __construct($conn = NULL, $db = NULL) {
-        if (!empty($conn)) {
-            $this->_conn = $conn;
-        } 
-        
-        if (!empty($db)) {
-            $this->_db = $db;
-        }
-    }
+    private $_comparisonOperators = [
+        '=',
+        '<',
+        '>',
+        '>=',
+        '<=',
+        '<>',
+        '!='
+    ];
 
-    public function _testDb() {
-        echo 'DB OK';
-    }
-
-    public function _getDb($class, $db = 'default') {
-        if($this->_connType == 'ssh'){
-            $this->_conn = new \phpseclib\Net\SSH2($this->_config['_ssh_']['host'], $this->_config['_ssh_']['port']);
-            $this->_conn->_connect();
-            $this->_conn->login($this->_config['_ssh_']['user'], $this->_config['_ssh_']['password']);
-        }else{
-            $servername = env('DB_'.strtoupper($db).'_HOST');
-            $username = env('DB_'.strtoupper($db).'_USERNAME');
-            $password = env('DB_'.strtoupper($db).'_PASSWORD');
-            $database = env('DB_'.strtoupper($db).'_DATABASE');
-            try {
-                $this->_conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
-                $this->_conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            } catch (\PDOException $e) {
-                die($e);
-            }
-        }
-        $class = $class . 'Model';
-        $model = new $class($this->_conn, $db);
-        return $model;
-    }
-
-    public function _nonQuery($query, $mode = null) {
-        if($this->_connType == 'ssh'){
-            return $this->parse_ssh($this->ssh($query, true), 'nonQuery');
-        }else{
-            $stmt = $this->_conn->prepare($query['statement']);
-            if (!empty($query['params'])) {
-                foreach ($query['params'] as $k => $v) {
-                    if (!isset($v['type'])) {
-                        $v['type'] = PDO::PARAM_STR;
-                    }
-                    $stmt->bindParam($k, $v['var'], $v['type']);
-                }
-            }
-            $stmt->setFetchMode(PDO::FETCH_ASSOC);
-            $stmt->execute();
-            return $this->_conn->lastInsertId();
-        }
-    }
-
-    public function _query($query) {
-        if($this->_connType == 'ssh'){
-            return $this->parse_ssh($this->ssh($query), 'query');
-        }else{
-            $stmt = $this->_conn->prepare($query['statement']);
-            if (!empty($query['params'])) {
-                foreach ($query['params'] as $k => $v) {
-                    if (!isset($v['type'])) {
-                        $v['type'] = PDO::PARAM_STR;
-                    }
-                    $stmt->bindParam($k, $v['var'], $v['type']);
-                }
-            }
-            $stmt->setFetchMode(PDO::FETCH_ASSOC);
-            $stmt->execute();
-
-            return $stmt->fetch();
-        }
-    }
-
-    public function _queryAll($query) {
-        if($this->_connType == 'ssh'){
-            return $this->parse_ssh($this->ssh($query), 'queryAll');
-        }else{
-            $stmt = $this->_conn->prepare($query['statement']);
-            if (!empty($query['params'])) {
-                foreach ($query['params'] as $k => $v) {
-                    if (!isset($v['type'])) {
-                        $v['type'] = PDO::PARAM_STR;
-                    }
-                    $stmt->bindParam($k, $v['var'], $v['type']);
-                }
-            }
-            $stmt->setFetchMode(PDO::FETCH_ASSOC);
-            $stmt->execute();
-
-
-            return $stmt->fetchAll();
-        }
-    }
-
-    /**
-     * May not be useful
-     */
-    public function _ifExist($table, $params){
-        $queryStr;
-        $paramsArr = array();
-        if(is_array($params)){
-            foreach($params as $key=>$val){
-                if(!empty($queryStr)){
-                    $queryStr .= "AND";
-                }
-                $queryStr .= " $key=:$key ";
-                $paramsArr[":$key"] = array(
-                    "var"=>$value
-                );
-            }
-        }else{
-            throw new MIGHTYEXCEPTION('_ifExist expects parameters to be array');
-        }
-        $params['statement'] = "SELECT COUNT(*) AS count FROM $table WHERE $queryStr";
-        $params['params'] = $paramsArr;
-        $result = $this->_query($params);
-
-        if($result['count']!==0){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-    public function createSingleInstance($db) {
-        $servername = env('DB_'.strtoupper($db).'_HOST');
-        $username = env('DB_'.strtoupper($db).'_USERNAME');
-        $password = env('DB_'.strtoupper($db).'_PASSWORD');
-        $database = env('DB_'.strtoupper($db).'_DATABASE');
+    public function __construct()
+    {
+        /**
+         * Establish Connecetion with Database
+         * ENV Connection convention: DB_CONNECTION_X
+         */
+        $servername = env('DB_' . strtoupper($this->connection) . '_HOST');
+        $username = env('DB_' . strtoupper($this->connection) . '_USERNAME');
+        $password = env('DB_' . strtoupper($this->connection) . '_PASSWORD');
+        $database = env('DB_' . strtoupper($this->connection) . '_DATABASE');
         try {
-            $this->_conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
-            $this->_conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $e) {
+            $db = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->db = $db;
+        } catch (\PDOException $e) {
             die($e);
         }
 
-        return $this->_conn;
-    }
-    
-    private function ssh($query, $last_id=false){
-        if (!empty($query['params'])) {
-            foreach ($query['params'] as $k => $v) {
-                $query['statement'] = str_replace($k, "'".$v['var']."'", $query['statement']);
-            }
-
-        }
-        $bind = str_replace('"', "'", $query['statement']);
-        if($last_id == true){
-            $bind .= "; SELECT LAST_INSERT_ID();";
-        }
-        return $this->_conn->exec('echo "'.$bind.'" | mysql -u '.$this->_config[$this->_db]['username'].' -p'.$this->_config[$this->_db]['password'].' '.$this->_config[$this->_db]['database']);
-    }
-    
-    private function parse_ssh($string, $type){
-        if(!empty($string)){
-            $output = explode("\n", $string);
-            $colNames = explode("\t", $output[0]);
-            if($type == 'query'){
-                $colValues = explode("\t", $output[1]);
-                return array_combine($colNames, $colValues);
-            }else if($type == 'queryAll'){
-                $data = array();
-                for($i=1; $i<count($output)-1; $i++){
-                    $colValues = explode("\t", $output[$i]);
-                    $cols = array_combine($colNames, $colValues);
-                    $data[] = $cols;
-                }
-                return $data;
-            }else if($type == 'nonQuery'){
-                if($colNames[0] == 'LAST_INSERT_ID()'){
-                    $colValues = explode("\t", $output[1]);
-                    return $colValues[0];
-                }else{
-                    return false;
-                }
-            }
-        }else{
-            if($type == 'query' || $type=="queryAll"){
-                return array();
-            }else{
-                return false;
-            }
+        /**
+         * Set default table to class name without Model suffix, if not set
+         */
+        if($this->table === null){
+            $tableClassPath = get_called_class();
+            $tableClassPathExplode = explode("\\", $tableClassPath);
+            $tableClass = end($tableClassPathExplode);
+            $this->table = strtolower(str_replace('Model', '', $tableClass));
         }
     }
 
+    protected function startLog(){
+        $this->log = true;
+    }
+
+    private function execute()
+    {
+        $query = $this->queryBuilder();
+        $query = $this->db->prepare($query);
+        $query->execute($this->_params);
+
+        /**
+         * After execute, we will clear all queries
+         */
+        $this->_main = '';
+        $this->_join = '';
+        $this->_where = '';
+        $this->_group = '';
+        $this->_order = '';
+        $this->_params = array();
+        $this->_updateParams = array();
+
+        return $query;
+    }
+
+    public function getQuery(){
+        $query = $this->queryBuilder();
+        return array(
+            'query' => $query,
+            'params' => $this->_params
+        );
+    }
+
+    protected function raw($query){
+        $this->_main = $query;
+        return $this;
+    }
+
+    /**
+     * Gets the result of a query. Usually with SELECT statement
+     * 
+     * @return array The query fetch objects in array
+     */
+    public function get()
+    {
+        return $this->execute()->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    /**
+     * Gets the result of a query. Usually with SELECT statement
+     * 
+     * @return array The query fetch results in associative array
+     */
+    public function getArr()
+    {
+        return $this->execute()->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Gets the result of a query. Usually with SELECT statement
+     * 
+     * @return object The query fetch object
+     */
+    public function getOne()
+    {
+        return $this->execute()->fetch(PDO::FETCH_OBJ);
+    }
+
+    /**
+     * Generates the update query
+     * 
+     * @param array Associative array with column to value set for update query
+     */
+    public function update($update)
+    {
+        $this->mode = 'update';
+        $updateQuery = '';
+        // var_dump($update);
+        foreach ($update as $key => $value) {
+            if ($updateQuery !== "") {
+                $updateQuery .= ",";
+            }
+            $updateQuery .= " $key = ? ";
+            $this->_updateParams[] = $value;
+        }
+        
+        $this->_main = "UPDATE $this->table " . $this->_join . " SET $updateQuery";
+        $this->execute();
+    }
+
+    /**
+     * Query builder
+     */
+    private function queryBuilder()
+    {
+        if($this->_main === ''){
+            $this->_main = 'SELECT * FROM $this->table ';
+        }
+
+        if ($this->mode == 'update') {
+            $this->_params = array_merge($this->_updateParams, $this->_params);
+            $query = $this->_main . " " . $this->_where . " " . $this->_group . " " . $this->_order;
+        } else {
+            $query = $this->_main . " " . $this->_join . " " . $this->_where . " " . $this->_group . " " . $this->_order;
+        }
+
+        return $query;
+    }
+
+    /**
+     * Inserts records into the database
+     * 
+     * @return integer The last insert ID
+     */
+    public function insert($args)
+    {
+        $insertQuery = '';
+        $inserQueryValue = '';
+        foreach ($args as $key => $value) {
+            if ($insertQuery !== "") {
+                $insertQuery .= ",";
+                $inserQueryValue .= ",";
+            }
+            $insertQuery .= " $key ";
+            $inserQueryValue .= " ? ";
+            $this->_params[] = $value;
+        }
+
+        $this->_main = "INSERT INTO $this->table ($insertQuery) VALUES ($inserQueryValue)";
+        $this->execute();
+        return intval($this->db->lastInsertId());
+    }
+
+    /**
+     * Generates the select query
+     * 
+     * @return object
+     */
+    public function select()
+    {
+        $args = func_get_args();
+        $this->_main = "SELECT ";
+        foreach ($args as $key => $value) {
+            if ($key > 0) {
+                $this->_main .= ",";
+            }
+            $this->_main .= " $value ";
+        }
+        $this->_main .= " FROM $this->table ";
+        return $this;
+    }
+
+    public function delete(){
+        $this->_main = "DELETE FROM $this->table ";
+        $this->execute();
+    }
+
+    private function whereProcessor($args, $type)
+    {
+        $first = false;
+        if ($this->_where == "") {
+            $first = true;
+            $this->_where = " WHERE ";
+        }
+        $index = 0;
+        foreach ($args as $key => $value) {
+            if ($index == 0) {
+                if ($first === false) {
+                    $this->_where .= " $type ";
+                }
+                $this->_where .= " $value ";
+            }
+            if ($index == 1) {
+                //check for operations
+                if (\in_array($value, $this->_comparisonOperators) && !is_int($value)) {
+                    $this->_where .= " $value ";
+                } else {
+                    $this->_where .= " =? ";
+                    $this->_params[] = $value;
+                }
+            }
+            if ($index == 2) {
+                $this->_where .= " ? ";
+                $this->_params[] = $value;
+            }
+            $index++;
+        }
+        return $this;
+    }
+
+    /**
+     * Generates the where query
+     */
+    public function where()
+    {
+        return $this->whereProcessor(func_get_args(), 'AND');
+    }
+
+    public function orWhere()
+    {
+        return $this->whereProcessor(func_get_args(), 'OR');
+    }
+
+    /**
+     * whereRaw
+     * 
+     * accepts raw where queries for AND
+     */
+    public function whereRaw($raw)
+    {
+        if ($this->_where == "") {
+            $this->_where = " WHERE ";
+            $this->_where .= " $raw ";
+        } else {
+            $this->_where .= " AND $raw ";
+        }
+        return $this;
+    }
+
+    /**
+     * orWhereRaw
+     * 
+     * accepts raw where queries for OR
+     */
+    public function orWhereRaw($raw)
+    {
+        if ($this->_where == "") {
+            $this->_where = " WHERE ";
+            $this->_where .= " $raw ";
+        } else {
+            $this->_where .= " OR $raw ";
+        }
+        return $this;
+    }
+
+    public function orderBy()
+    {
+        $args = func_get_args();
+        $first = false;
+        if ($this->_order == "") {
+            $first = true;
+            $this->_order = " ORDER BY ";
+        }
+        for ($i = 0; $i < sizeof($args); $i++) {
+            if ($i == 0) {
+                if ($first === false) {
+                    $this->_order .= ",";
+                }
+                $this->_order .= " $args[$i] ";
+            }
+            if ($i == 1) {
+                $this->_order .= " $args[$i] ";
+            }
+        }
+        return $this;
+    }
+
+    public function groupBy($group)
+    {
+        if ($this->_group == '') {
+            $this->_group .= " GROUP BY ";
+            $this->_group .= " $group ";
+        } else {
+            $this->_group .= ", $group ";
+        }
+
+        return $this;
+    }
+
+    public function innerJoin()
+    {
+        $args = func_get_args();
+        $this->joinProcessor('INNER JOIN', $args);
+        return $this;
+    }
+
+    public function leftJoin()
+    {
+        $args = func_get_args();
+        $this->joinProcessor('LEFT JOIN', $args);
+        return $this;
+    }
+
+    public function outerJoin()
+    {
+        $args = func_get_args();
+        $this->joinProcessor('OUTER JOIN', $args);
+        return $this;
+    }
+
+    private function joinProcessor($mode, $args)
+    {
+        $this->_join .= " $mode $args[0] ON $args[1] $args[2] $args[3] ";
+    }
+
+    public static function close()
+    {
+        STORAGE::$db = null;
+        STORAGE::$table = null;
+    }
 }

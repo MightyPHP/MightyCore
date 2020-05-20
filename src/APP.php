@@ -87,7 +87,7 @@ class APP {
             }
             
             /**Setting the controller class */
-            $controller_class = 'Application\\Controllers\\'. str_replace('/', '\\', $route['controller']) . "Controller";
+            $controller_class = 'Application\\Controllers\\'. str_replace('/', '\\', $route['controller']);
 
             /**If controller exists, else return 404 */
             if (class_exists($controller_class)) {
