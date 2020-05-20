@@ -15,7 +15,7 @@ class VIEW {
 
     public function render($data = null, $legacy = false) {
         $this->legacy = $legacy;
-        $view_file = file_get_contents(VIEW_PATH . '/' . $this->_view . ".html");
+        $view_file = file_get_contents(DOC_ROOT . '/Application/Views/' . $this->_view . ".html");
         
         if (!empty($this->_template)) {
             $template_file = file_get_contents(TEMPLATE_PATH . '/' . $this->_template . ".html");
@@ -63,7 +63,7 @@ class VIEW {
                 'twig' => $view_file,
             ]);
 
-            $loader2 = new \Twig\Loader\FilesystemLoader(VIEW_PATH);
+            $loader2 = new \Twig\Loader\FilesystemLoader(DOC_ROOT."/Application/Views");
 
             $loader = new \Twig\Loader\ChainLoader([$loader1, $loader2]);
             $twig = new \Twig\Environment($loader);
@@ -146,7 +146,7 @@ class VIEW {
                 if($v == 'include'){
                     foreach($param as $kp=>$kv){
                         $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
-                        $view_file = preg_replace($pattern, file_get_contents(VIEW_PATH . '/' . $kv . ".html"), $view_file);
+                        $view_file = preg_replace($pattern, file_get_contents(DOC_ROOT . '/Application/Views/' . $kv . ".html"), $view_file);
                     } 
                 }
 
