@@ -4,6 +4,7 @@ require __DIR__ . '/../../../../autoload.php';
 
 /*Utilities Path*/
 define("UTILITY_PATH", DOC_ROOT . '/Utilities');
+define('SECURITY_SESSION_TIMEOUT', env('SECURITY_SESSION_TIMEOUT', 3600));
 
 /**
  * This part loads the .env values into putenv
