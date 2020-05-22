@@ -227,26 +227,20 @@ class VIEW {
     private function mapControllers($scope, $args) {
         $args = implode(",", $args);
         $scope = explode("@",$scope);
-        $controller_class = $scope[0]."Controller";
+        $controller_class = '\\Application\\Controllers\\'.$scope[0];
         $func = $scope[1];
 
         if (class_exists($controller_class)) {
             $class = new $controller_class();
         }else{
-            /**Try to include the file again with sub path */
-            include_once CONTROLLER_PATH.'/'.$controller_class.'.php';
-            $controller_class = explode("/", $controller_class)[1];
-            if (class_exists($controller_class)) {
-                $class = new $controller_class();
-            }else{
-                return false;
-            }
+           return false;
         }
 
         /**If method exists, else return 404 */
         if (method_exists($class, $func)) {
             return $class->$func($args);
         } else {
+            die('not found func');
             return false;
         }
     }
