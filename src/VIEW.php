@@ -225,9 +225,9 @@ class VIEW {
     }
 
     private function mapControllers($scope, $args) {
-        $args = implode(",", $args);
         $scope = explode("@",$scope);
         $controller_class = '\\Application\\Controllers\\'.$scope[0];
+        $class = new $controller_class();
         $func = $scope[1];
 
         if (class_exists($controller_class)) {
@@ -238,9 +238,8 @@ class VIEW {
 
         /**If method exists, else return 404 */
         if (method_exists($class, $func)) {
-            return $class->$func($args);
+            return call_user_func_array(array($class, $func), $args);
         } else {
-            die('not found func');
             return false;
         }
     }
