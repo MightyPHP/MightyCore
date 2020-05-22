@@ -6,16 +6,20 @@ class RESPONSE{
     
     public static function return($data, $status = 200){
         header("HTTP/1.1 " . $status . " " . RESPONSE::_requestStatus($status));
-        if (is_array($data)) {
-            $data = json_encode($data);
-        }
-
         if($status !== 200){ 
             include "status_response/template.php";
             exit; 
         }else{
             echo $data;
         }
+    }
+
+    public static function json($data, $status = 200){
+        if(is_array($data)){
+            $data = json_encode($data);
+        }
+        header('Content-Type: application/json');
+        RESPONSE::return($data, $status);
     }
 
     public static function make($data, $status = 200){

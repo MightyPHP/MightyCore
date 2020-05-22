@@ -43,20 +43,6 @@ class APP {
         RESPONSE::return('Oops, something is broken.',500);
     }
 
-    private function readEnv(){
-        if(file_exists ( DOC_ROOT . ".env" )){
-            $envFile = fopen(DOC_ROOT . ".env", "r");
-            $contents = fread($envFile, filesize(DOC_ROOT . ".env"));
-            $contents = explode("\n", $contents);
-            foreach($contents as $key=>$value){
-                if(!empty($value)){
-                    putenv($value);
-                }
-            }
-            fclose($envFile);
-        }    
-    }
-
     public function callAPP() {
         try{
             /**Get routing afer processing */
@@ -66,8 +52,9 @@ class APP {
                 RESPONSE::return('Not found', 404);
             }else{
                 /**Checks for CSRF */
-                $this->_security->csrfCheck($route);
-
+                $checkCsrf = env('CSRF_ENABLED', true);
+                // if($checkCsrf == true){ $this->_security->csrfCheck($route); }
+                
                 /**Start to administer middleware */
                 if($route['middleware']){
                     foreach($route['middleware'] as $k=>$v){
@@ -109,7 +96,8 @@ class APP {
                 exit;
             }
         }catch(\Exception $e){
-            UTIL::log($e->getMessage(), 'Error');
+            throw $e;
+            // UTIL::log($e->getMessage(), 'Error');
         }
     }
 

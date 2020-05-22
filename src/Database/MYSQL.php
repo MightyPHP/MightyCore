@@ -1,10 +1,10 @@
 <?php
 
-namespace MightyCore;
+namespace MightyCore\Database;
 
 use PDO;
 
-class MODEL
+class MYSQL
 {
     private $db = null;
 
@@ -57,6 +57,10 @@ class MODEL
         '<>',
         '!='
     ];
+
+    public static function __callStatic($name, $args){
+        die($name);
+    }
     
     public function __construct()
     {
