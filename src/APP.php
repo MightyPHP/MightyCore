@@ -1,6 +1,9 @@
 <?php
+
 namespace MightyCore;
-class APP {
+
+class APP
+{
 
     /**
      * Property: class
@@ -8,57 +11,49 @@ class APP {
      */
     protected $class = Null;
 
-    public $_security = null;
-
-    public function __construct($request, $origin) {
+    public function __construct($request, $origin)
+    {
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             REQUEST::$ajax = true;
         }
 
         /**
-         * Starts session
+         * Starts the SECURITY Module
          */
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        SECURITY::init();
 
-        /**
-         * Get ENV Variables
-         */
-        // $this->readEnv();
-        
         /**
          * Secure the request,
          * then start
          */
         REQUEST::init(REQUEST::secure($request));
 
-        $this->_security = new SECURITY();
-        if(getenv('ENV')=="production"){
-            set_error_handler($this->errorHandler());
+        if (env('APP_ENV') == "production") {
+            set_error_handler(array($this, "errorHandler"), E_ALL);
         }
     }
 
-    private function errorHandler(){
-        RESPONSE::return('Oops, something is broken.',500);
+    public function errorHandler()
+    {
+        RESPONSE::return('Oops, something is broken.', 500);
     }
 
-    public function callAPP() {
-        try{
+    public function callAPP()
+    {
+        try {
             /**Get routing afer processing */
             $route = ROUTE::getProccessedRoute(REQUEST::$method);
 
-            if($route === false || empty($route)){
+            if ($route === false || empty($route)) {
                 RESPONSE::return('Not found', 404);
-            }else{
+            } else {
                 /**Checks for CSRF */
-                $checkCsrf = env('CSRF_ENABLED', true);
-                // if($checkCsrf == true){ $this->_security->csrfCheck($route); }
-                
+                SECURITY::csrfCheck($route);
+
                 /**Start to administer middleware */
-                if($route['middleware']){
-                    foreach($route['middleware'] as $k=>$v){
-                        $v = "Application\\Middlewares\\".str_replace('/', '\\', $v)."Middleware";
+                if ($route['middleware']) {
+                    foreach ($route['middleware'] as $k => $v) {
+                        $v = "Application\\Middlewares\\" . str_replace('/', '\\', $v) . "Middleware";
                         $this_middleware = new $v();
                         $this_middleware->administer();
                         //TODO: if middleware not found?
@@ -66,20 +61,20 @@ class APP {
                 }
 
                 /**Start to check for security */
-                if($route['secure']){
-                    if(!$this->_security->checkAuth()){
+                if ($route['secure']) {
+                    if (SECURITY::checkAuth()) {
                         RESPONSE::return("Unauthorized", 401);
                     }
                 }
             }
-            
+
             /**Setting the controller class */
-            $controller_class = 'Application\\Controllers\\'. str_replace('/', '\\', $route['controller']);
+            $controller_class = 'Application\\Controllers\\' . str_replace('/', '\\', $route['controller']);
 
             /**If controller exists, else return 404 */
             if (class_exists($controller_class)) {
                 $this->class = new $controller_class();
-            }else{
+            } else {
                 RESPONSE::return('Not found', 404);
                 exit;
             }
@@ -88,17 +83,15 @@ class APP {
             if (method_exists($this->class, $route['method'])) {
                 $func = $route['method'];
                 $return = $this->class->$func();
-                if(!empty($return)){
+                if (!empty($return)) {
                     RESPONSE::return($return);
                 }
             } else {
                 RESPONSE::return('Not found', 404);
                 exit;
             }
-        }catch(\Exception $e){
-            throw $e;
-            // UTIL::log($e->getMessage(), 'Error');
+        } catch (\Throwable $th) {
+            throw $th;
         }
     }
-
 }

@@ -65,15 +65,16 @@ class MODEL
          * ENV Connection convention: DB_CONNECTION_X
          */
         $servername = env('DB_' . strtoupper($this->connection) . '_HOST');
+        $port = env('DB_' . strtoupper($this->connection) . '_PORT');
         $username = env('DB_' . strtoupper($this->connection) . '_USERNAME');
         $password = env('DB_' . strtoupper($this->connection) . '_PASSWORD');
         $database = env('DB_' . strtoupper($this->connection) . '_DATABASE');
         try {
-            $db = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $db = new PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->db = $db;
         } catch (\PDOException $e) {
-            die($e);
+            throw $e;
         }
 
         /**

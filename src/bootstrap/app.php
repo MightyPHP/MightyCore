@@ -92,13 +92,13 @@ function view($view, $data) {
  */
 date_default_timezone_set(env('DEFAULT_TIMEZONE'));
 
-if(env('ENV') == 'develop'){
-  ini_set('display_errors','On');
+if(env('APP_ENV') == 'develop'){
+  ini_set('display_errors',true);
   ini_set('html_errors',true);
   error_reporting(E_ALL);
-}else if(env('ENV') == 'production'){
+}else if(env('APP_ENV') == 'production'){
   //Do not display error for security reasons
-  ini_set('display_errors','Off');
+  ini_set('display_errors',false);
 }
 
 // Requests from the same server don't have a HTTP_ORIGIN header
