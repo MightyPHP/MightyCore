@@ -28,14 +28,18 @@ class APP
          */
         REQUEST::init(REQUEST::secure($request));
 
-        if (env('APP_ENV') == "production") {
-            set_error_handler(array($this, "errorHandler"), E_ALL);
-        }
+        set_error_handler(array($this, "errorHandler"), E_ALL);
+        set_exception_handler(array($this, "errorHandler"));
     }
 
-    public function errorHandler()
+    public function errorHandler($e)
     {
-        RESPONSE::return('Oops, something is broken.', 500);
+        if (env('APP_ENV') !== "production") {
+            RESPONSE::return('Oops, something is broken.', 500, $e);
+        }else{
+            RESPONSE::return('Oops, something is broken.', 500);
+        }
+        
     }
 
     public function callAPP()

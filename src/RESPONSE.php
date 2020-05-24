@@ -4,7 +4,7 @@ namespace MightyCore;
 
 class RESPONSE{ 
     
-    public static function return($data, $status = 200){
+    public static function return($data, $status = 200, $trace=null){
         header("HTTP/1.1 " . $status . " " . RESPONSE::_requestStatus($status));
         if($status !== 200){ 
             include "status_response/template.php";
@@ -22,7 +22,7 @@ class RESPONSE{
         RESPONSE::return($data, $status);
     }
 
-    public static function make($data, $status = 200){
+    public static function make($data, $status = 200, $trace=null){
         header("HTTP/1.1 " . $status . " " . RESPONSE::_requestStatus($status));
         if (is_array($data)) {
             $data = json_encode($data);

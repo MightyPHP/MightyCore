@@ -8,6 +8,6 @@ class CONTROLLER {
     public $_security;
 
     public function __construct() {
-        $this->_security = new SECURITY();
+        // $this->_security = new SECURITY();
     }
 }
