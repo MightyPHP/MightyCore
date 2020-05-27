@@ -4,7 +4,7 @@ namespace MightyCore\Database;
 
 use PDO;
 
-class MYSQL
+class Model
 {
     private $db = null;
 
@@ -57,10 +57,6 @@ class MYSQL
         '<>',
         '!='
     ];
-
-    public static function __callStatic($name, $args){
-        die($name);
-    }
     
     public function __construct()
     {
@@ -69,15 +65,16 @@ class MYSQL
          * ENV Connection convention: DB_CONNECTION_X
          */
         $servername = env('DB_' . strtoupper($this->connection) . '_HOST');
+        $port = env('DB_' . strtoupper($this->connection) . '_PORT');
         $username = env('DB_' . strtoupper($this->connection) . '_USERNAME');
         $password = env('DB_' . strtoupper($this->connection) . '_PASSWORD');
         $database = env('DB_' . strtoupper($this->connection) . '_DATABASE');
         try {
-            $db = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
+            $db = new PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->db = $db;
         } catch (\PDOException $e) {
-            die($e);
+            throw $e;
         }
 
         /**
@@ -383,11 +380,5 @@ class MYSQL
     private function joinProcessor($mode, $args)
     {
         $this->_join .= " $mode $args[0] ON $args[1] $args[2] $args[3] ";
-    }
-
-    public static function close()
-    {
-        STORAGE::$db = null;
-        STORAGE::$table = null;
     }
 }
