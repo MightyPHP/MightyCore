@@ -86,6 +86,11 @@ class Schematic{
     return $this;
   }
 
+  public function default($value){
+    $this->queryArr[count($this->queryArr)-1]["default"] = " DEFAULT '$value'";
+    return $this;
+  }
+
   /**
    * Sets primary key of the table.
    *
@@ -122,7 +127,7 @@ class Schematic{
    * @return object
    */
   public function increments(){
-    $this->queryArr[count($this->queryArr)-1]["ai"] = ' AUTO INCREMENT';
+    $this->queryArr[count($this->queryArr)-1]["ai"] = ' AUTO_INCREMENT';
   }
 
   public function build(){

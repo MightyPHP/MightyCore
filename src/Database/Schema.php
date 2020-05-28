@@ -35,7 +35,6 @@ class Schema
   {
     $calledClass = debug_backtrace()[1]['class'];
     $calledClass = new $calledClass();
-    self::getTableDetails($calledClass->connection, $table);
 
     $schematic = new Schematic('create');
     $function($schematic);
@@ -55,5 +54,9 @@ class Schema
     $schematicQuery = $schematic->build();
 
     return "ALTER TABLE " . $table . " $schematicQuery;";
+  }
+
+  public static function drop($table){
+    return "DROP TABLE `$table`;";
   }
 }
