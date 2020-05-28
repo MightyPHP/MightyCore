@@ -83,9 +83,12 @@ class CONSOLE {
              * Writes the template file
              */
             $token = $this->getToken(12);
-            $filename = '_'.date('Y_m_d').'_'.$name.'_'.$token;
+            $filename = '_'.date('Y_m_d').'_'.date("His").'_'.$name.'_'.$token;
             $fp=fopen(UTILITY_PATH."/Seeds/$filename.php",'w');
             $seed_template = '<?php
+use \MightyCore\Database\Schema;
+use \MightyCore\Database\Schematic;
+             
 class '.$filename.'{
     public $timestamp='.strtotime(date('Y-m-d H:i:s')).';
     public $connection="'.$connection.'";

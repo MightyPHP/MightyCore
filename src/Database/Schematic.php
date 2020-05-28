@@ -8,14 +8,25 @@ class Schematic{
   private $pKey = '';
   private $col = '';
   private $type = '';
+  private $attributes = array();
 
-  public function __construct($type){
+  public function __construct($type, $attributes=[]){
     $this->type = $type;
+    $this->attributes = $attributes;
   }
 
   public function __call($method, $args){
     $this->method = $method;
     return call_user_func_array(array($this, "catch"), $args);
+  }
+
+  private function isColumnExist($column){
+    foreach($this->attributes as $value){
+      if($value["Field"] == $column){
+        return true;
+      } 
+    }
+    return false;
   }
 
   /**
@@ -26,45 +37,107 @@ class Schematic{
    * @return object
    */
   public function catch($col, $length=false){
-    if(empty($this->queryArr)){
+    if(empty($this->queryArr) && $this->type == "create"){
       $this->pKey = $col;
     }
     $this->col = $col;
-    $query = array();
-    $query = strtoupper($this->method).($length !== false ? "($length)" : '');
     $query = array(
+      "method" => $this->method,
+      "rename" => $this->type == 'alter' ? "$col" : "",
       "column" => $col,
-      "main" => "`$col` $query",
+
+      // build() method starts reading here
+      "length" => $length !== false ? "($length)" : '',
       "null" => " NOT NULL",
       "unsigned" => "",
       "ai" => "",
-      "default" => ""
+      "default" => "",
+      "after" => ""
     );
     $this->queryArr[] = $query;
     return $this;
   }
 
-  public function primaryKey(){
-    $this->pKey = $this->col;
+  private function buildMainQuery($index){
+    $col = $this->queryArr[$index]['column'];
+    $rename = $this->queryArr[$index]['rename'];
+    $method = $this->queryArr[$index]['method'];
+    if($this->type == "create"){
+      return " `$col` ".strtoupper($method);
+    }
+
+    if($this->type == "alter"){
+      if($this->isColumnExist($col)){
+        return " CHANGE COLUMN `$col` `$rename` ".strtoupper($method);
+      }else{
+        return " ADD COLUMN `$col` ".strtoupper($method);
+      }
+    } 
   }
 
+  /**
+   * Renames a column.
+   *
+   * @param string $name The name of the column.
+   * @return object
+   */
+  public function rename($name){
+    $this->queryArr[count($this->queryArr)-1]["rename"] = "$name";
+    return $this;
+  }
+
+  /**
+   * Sets primary key of the table.
+   *
+   * @return object
+   */
+  public function primaryKey(){
+    $this->pKey = $this->col;
+    return $this;
+  }
+
+  /**
+   * Set a column to be nullable.
+   *
+   * @return object
+   */
   public function nullable(){
     $this->queryArr[count($this->queryArr)-1]["null"] = '';
     return $this;
   }
 
+  /**
+   * Sets a column to be unsigned.
+   *
+   * @return object
+   */
   public function unsigned(){
     $this->queryArr[count($this->queryArr)-1]["unsigned"] = ' UNSIGNED';
     return $this;
+  }
+
+  /**
+   * Sets a column to be auto increment.
+   *
+   * @return object
+   */
+  public function increments(){
+    $this->queryArr[count($this->queryArr)-1]["ai"] = ' AUTO INCREMENT';
   }
 
   public function build(){
     $query = '';
     for($i=0; $i<count($this->queryArr); $i++){
       $query = $this->queryArr[$i];
+      $this->query .= $this->buildMainQuery($i);
       foreach($query as $key => $value){
-        if($query[$key] != "" && $key != 'column'){
-          $this->query .= "$query[$key]";
+        if(
+            $value != "" && 
+            $key !== "column" &&
+            $key !== "rename" &&
+            $key !== "method"
+        ){
+          $this->query .= "$value";
         }
       }
       if(($i+1) !== count($this->queryArr)){
@@ -73,7 +146,16 @@ class Schematic{
     }
 
     // Set primary key now
-    $this->query .= " PRIMARY KEY ($this->pKey)";
+    if($this->pKey !== ""){
+      if($this->type == "create"){
+        $this->query .= ", PRIMARY KEY (`$this->pKey`)";
+      }
+      if($this->type == "alter"){
+        $this->query .= ", DROP PRIMARY KEY";
+        $this->query .= ", ADD PRIMARY KEY (`$this->pKey`)";
+      }
+    }
+   
     return $this->query;
   }
 
