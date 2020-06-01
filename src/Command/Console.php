@@ -55,7 +55,7 @@ class CONSOLE
             }
 
             echo "Started Mighty Development Server at port $port...\n";
-            exec("php -t Public -S localhost:$port " . __DIR__ . '/console/start.php');
+            exec("php -t Public -S localhost:$port " . __DIR__ . '/start.php');
         } catch (\Throwable $th) {
             print_r($th);
         }
