@@ -2,6 +2,8 @@
 
 namespace MightyCore;
 
+use MightyCore\Utilities\Logger;
+
 class APP
 {
 
@@ -28,18 +30,16 @@ class APP
          */
         REQUEST::init(REQUEST::secure($request));
 
-        set_error_handler(array($this, "errorHandler"), E_ALL);
-        set_exception_handler(array($this, "errorHandler"));
+        if (env('APP_ENV') == "production") {
+            set_error_handler(array($this, "errorHandler"), E_ALL);
+            set_exception_handler(array($this, "errorHandler"));
+        }
     }
 
     public function errorHandler($e)
     {
-        if (env('APP_ENV') !== "production") {
-            RESPONSE::return('Oops, something is broken.', 500, $e);
-        }else{
-            RESPONSE::return('Oops, something is broken.', 500);
-        }
-        
+        Logger::error($e);
+        RESPONSE::return('Oops, something is broken.', 500);   
     }
 
     public function callAPP()
