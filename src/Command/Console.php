@@ -1,8 +1,6 @@
 <?php
-
 namespace MightyCore\Command;
 
-require __DIR__ . '/../bootstrap/app.php';
 class CONSOLE
 {
     private $func;
@@ -15,9 +13,11 @@ class CONSOLE
         $arg = explode(":", $arg);
         if (!empty($arg[1])) {
             $this->func = $arg[1];
+        }else{
+            $this->func = $arg[0];
         }
 
-        $commands = ['start', 'seed', 'hello_world'];
+        $commands = ['start', 'seed', 'migration', 'make', 'hello_world'];
 
         // $this->method = $arg[0];
         $method = $arg[0];
@@ -31,6 +31,14 @@ class CONSOLE
     private function hello_world()
     {
         echo 'Hello World';
+    }
+
+    private function make(){
+        new Make($this->argv, $this->func);
+    }
+
+    private function migration(){
+        new Migration($this->argv, $this->func);
     }
 
     private function seed()

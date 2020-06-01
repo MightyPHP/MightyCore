@@ -2,8 +2,11 @@
 define("DOC_ROOT", __DIR__."/../../../../../");
 require __DIR__ . '/../../../../autoload.php';
 
-/*Utilities Path*/
+// Utilities Path
 define("UTILITY_PATH", DOC_ROOT . '/Utilities');
+// Database Path
+define("DATABASE_PATH", DOC_ROOT . '/Database');
+
 define('SECURITY_SESSION_TIMEOUT', env('SECURITY_SESSION_TIMEOUT', 3600));
 
 /**
