@@ -1,6 +1,8 @@
 <?php
 namespace MightyCore;
 
+use MightyCore\Vault\SessionManager;
+
 class SECURITY {
     /* Security config */
 
@@ -13,6 +15,7 @@ class SECURITY {
     }
     
     private function authUser($id){
+        SessionManager::regenerateSession();
         $_SESSION['id'] = $id;
     }
     

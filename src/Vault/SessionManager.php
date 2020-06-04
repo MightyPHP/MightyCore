@@ -6,7 +6,6 @@ class SessionManager
 {
   public static function sessionStart($limit = 0, $path = '/', $domain = null, $secure = null)
   {
-    session_save_path(DOC_ROOT."/Storage/Sessions");
     // Set SSL level
     $https = isset($secure) ? $secure : isset($_SERVER['HTTPS']);
     
@@ -18,22 +17,7 @@ class SessionManager
     self::generateCSRF();
 
     // Make sure the session hasn't expired, and destroy it if it has
-    if (self::validateSession()) {
-      // Check to see if the session is new or a hijacking attempt
-      if (!self::preventHijacking()) {
-        // Reset session data and regenerate id
-        // CSRF Token will stay, to allow attempts of authentication by user
-        $csrf = $_SESSION['csrf_token'];
-        $_SESSION = array();
-        session_destroy();
-        session_start();
-        $_SESSION['csrf_token'] = $csrf;
-        $_SESSION['IPaddress'] = $_SERVER['REMOTE_ADDR'];
-        $_SESSION['userAgent'] = $_SERVER['HTTP_USER_AGENT'];
-        self::regenerateSession();
-      }
-    } else {
-      // die('fail validate');
+    if (!self::validateSession()) {
       $_SESSION = array();
       session_destroy();
       session_start();
