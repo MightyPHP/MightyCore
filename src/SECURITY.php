@@ -1,5 +1,6 @@
 <?php
 namespace MightyCore;
+
 class SECURITY {
     /* Security config */
 
@@ -11,32 +12,17 @@ class SECURITY {
         /**
          * Starts assigning CSRF token
          */
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+
         if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
     }
     
     private function authUser($id){
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
         $_SESSION['id'] = $id;
     }
     
     public function checkAuth(){
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-        session_regenerate_id();
-        if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > SECURITY_SESSION_TIMEOUT)) {
-            // last request was more than configured session timeout
-            session_unset();     // unset $_SESSION variable for the run-time 
-            session_destroy();   // destroy session data in storage
-        }
-        $_SESSION['LAST_ACTIVITY'] = time(); // update last activity time stamp
         if(isset($_SESSION['id']) && !empty($_SESSION['id'])){
             return true;
         }else{
@@ -50,11 +36,10 @@ class SECURITY {
     }
 
     public function logout(){
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
+        if (session_status() !== PHP_SESSION_NONE) {
+            unset($_SESSION['id']);
+            session_destroy();
         }
-        unset($_SESSION['id']);
-        session_destroy();
     }
 
     public function encryptPassword($password){

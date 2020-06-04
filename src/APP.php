@@ -1,5 +1,7 @@
 <?php
 namespace MightyCore;
+
+use MightyCore\Vault\SessionManager;
 class APP {
 
     /**
@@ -18,9 +20,7 @@ class APP {
         /**
          * Starts session
          */
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        SessionManager::sessionStart("MightyVault");
 
         /**
          * Get ENV Variables
@@ -115,7 +115,7 @@ class APP {
                 RESPONSE::return('Not found', 404);
                 exit;
             }
-        }catch(\Exception $e){
+        }catch(Exception $e){
             UTIL::log($e->getMessage(), 'Error');
         }
     }
