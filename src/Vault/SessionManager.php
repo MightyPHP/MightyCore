@@ -24,6 +24,7 @@ class SessionManager
         $_SESSION = array();
         $_SESSION['IPaddress'] = $_SERVER['REMOTE_ADDR'];
         $_SESSION['userAgent'] = $_SERVER['HTTP_USER_AGENT'];
+        self::generateCSRF();
         self::regenerateSession();
 
         // Give a 5% chance of the session id changing on any request
@@ -34,6 +35,13 @@ class SessionManager
       $_SESSION = array();
       session_destroy();
       session_start();
+    }
+  }
+
+  static protected function generateCSRF()
+  {
+    if (empty($_SESSION['csrf_token'])) {
+      $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
   }
 

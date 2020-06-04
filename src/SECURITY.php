@@ -9,13 +9,7 @@ class SECURITY {
     public $auth = null;
 
     public function __construct(){
-        /**
-         * Starts assigning CSRF token
-         */
 
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
     }
     
     private function authUser($id){
