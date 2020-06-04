@@ -1,16 +1,14 @@
 <?php
 namespace MightyCore;
-class SECURITY {
+
+use MightyCore\Vault\SessionManager;
+
+class Security {
     /* Security config */
 
     public $_config = null;
     private $_db = null;
     public $auth = null;
-
-    public function __construct(){
-
-    }
-
 
     /**
      * To init the Security module.
@@ -21,15 +19,7 @@ class SECURITY {
         /**
          * Starts the session and assign CSRF token
          */
-        if (session_status() == PHP_SESSION_NONE) {
-            ini_set('session.gc_maxlifetime', env('SESSION_LIFESPAN', 1440));
-            ini_set('session.cookie_lifetime', env('SESSION_LIFESPAN', 1440));
-            session_start();
-        }
-
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        }
+        SessionManager::sessionStart();
     }
     
     /**
@@ -41,7 +31,7 @@ class SECURITY {
         if (session_status() == PHP_SESSION_NONE) {
             return false;
         }
-        session_regenerate_id();
+        session_regenerate_id(true);
         if(isset($_SESSION['_auth_timestamp']) && !empty($_SESSION['_auth_timestamp'])){
             return true;
         }else{
@@ -73,6 +63,7 @@ class SECURITY {
             unset($_SESSION['_auth_timestamp']);
             session_unset();
             session_destroy();
+            SessionManager::regenerateSession();
         } 
     }
 
@@ -93,11 +84,8 @@ class SECURITY {
      * @param array $arr The array to set for session.
      * @return void
      */
-    public static function setAuth($arr){
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-
+    public static function setAuth($arr=[]){
+        SessionManager::regenerateSession();
         $_SESSION['_auth_timestamp'] = strtotime(date('Y-m-d H:i:s'));
 
         foreach($arr as $key=>$value){
@@ -118,20 +106,20 @@ class SECURITY {
                 /**
                  * Checks for CSRF
                  */
-                if(!empty(REQUEST::$csrfToken)){
-                    if (hash_equals($_SESSION['csrf_token'], REQUEST::$csrfToken)) {
+                if(!empty(Request::$csrfToken)){
+                    if (hash_equals($_SESSION['csrf_token'], Request::$csrfToken)) {
                         return true;
                     } else {
-                        RESPONSE::return("Forbidden", 403);
+                        Response::return("Forbidden", 403);
                     }
                 }else if(!empty($_SERVER['HTTP_X_CSRF_TOKEN'])){
                     if (hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])) {
                         return true;
                     } else {
-                        RESPONSE::return("Forbidden", 403);
+                        Response::return("Forbidden", 403);
                     }
                 }else{
-                    RESPONSE::return("Forbidden", 403);
+                    Response::return("Forbidden", 403);
                 }
             }else{
                 return true;
