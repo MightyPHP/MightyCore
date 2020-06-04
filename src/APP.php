@@ -16,19 +16,19 @@ class APP
     public function __construct($request, $origin)
     {
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-            REQUEST::$ajax = true;
+            Request::$ajax = true;
         }
 
         /**
          * Starts the SECURITY Module
          */
-        SECURITY::init();
+        Security::init();
 
         /**
          * Secure the request,
          * then start
          */
-        REQUEST::init(REQUEST::secure($request));
+        Request::init(Request::secure($request));
 
         if (env('APP_ENV') == "production") {
             set_error_handler(array($this, "errorHandler"), E_ALL);
@@ -39,7 +39,7 @@ class APP
     public function errorHandler($e)
     {
         Logger::error($e);
-        RESPONSE::return('Oops, something is broken.', 500);   
+        Response::return('Oops, something is broken.', 500);   
     }
 
     public function callAPP()
@@ -49,10 +49,10 @@ class APP
             $route = ROUTE::getProccessedRoute(REQUEST::$method);
 
             if ($route === false || empty($route)) {
-                RESPONSE::return('Not found', 404);
+                Response::return('Not found', 404);
             } else {
                 /**Checks for CSRF */
-                SECURITY::csrfCheck($route);
+                Security::csrfCheck($route);
 
                 /**Start to administer middleware */
                 if ($route['middleware']) {
@@ -66,8 +66,8 @@ class APP
 
                 /**Start to check for security */
                 if ($route['secure']) {
-                    if (SECURITY::checkAuth()) {
-                        RESPONSE::return("Unauthorized", 401);
+                    if (Security::checkAuth()) {
+                        Response::return("Unauthorized", 401);
                     }
                 }
             }
@@ -79,7 +79,7 @@ class APP
             if (class_exists($controller_class)) {
                 $this->class = new $controller_class();
             } else {
-                RESPONSE::return('Not found', 404);
+                Response::return('Not found', 404);
                 exit;
             }
 
@@ -88,10 +88,10 @@ class APP
                 $func = $route['method'];
                 $return = $this->class->$func();
                 if (!empty($return)) {
-                    RESPONSE::return($return);
+                    Response::return($return);
                 }
             } else {
-                RESPONSE::return('Not found', 404);
+                Response::return('Not found', 404);
                 exit;
             }
         } catch (\Throwable $th) {
