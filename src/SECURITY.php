@@ -63,20 +63,23 @@ class SECURITY {
                 /**
                  * Checks for CSRF
                  */
+                $wrongError = 'Unauthorized';
+                $appEnv = env('ENV', 'development');
+                if($appEnv == 'development'){ $wrongError = "Wrong CSRF Token. Current token is ".$_SESSION['csrf_token'];}
                 if(!empty(REQUEST::$csrfToken)){
                     if (hash_equals($_SESSION['csrf_token'], REQUEST::$csrfToken)) {
                         return true;
                     } else {
-                        RESPONSE::return("Unauthorized", 401);
+                        RESPONSE::return($wrongError, 401);
                     }
                 }else if(!empty($_SERVER['HTTP_X_CSRF_TOKEN'])){
                     if (hash_equals($_SESSION['csrf_token'], $_SERVER['HTTP_X_CSRF_TOKEN'])) {
                         return true;
                     } else {
-                        RESPONSE::return("Unauthorized", 401);
+                        RESPONSE::return($wrongError, 401);
                     }
                 }else{
-                    RESPONSE::return("Unauthorized", 401);
+                    RESPONSE::return($wrongError, 401);
                 }
             }else{
                 return true;
@@ -86,5 +89,3 @@ class SECURITY {
         }
     }
 }
-
-?>
