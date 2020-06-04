@@ -20,7 +20,7 @@ class APP {
         /**
          * Starts session
          */
-        SessionManager::sessionStart("MightyVault");
+        SessionManager::sessionStart();
 
         /**
          * Get ENV Variables
