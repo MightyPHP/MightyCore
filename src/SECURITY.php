@@ -14,7 +14,7 @@ class SECURITY {
 
     }
     
-    private function authUser($id){
+    public function authUser($id){
         SessionManager::regenerateSession();
         $_SESSION['id'] = $id;
     }
