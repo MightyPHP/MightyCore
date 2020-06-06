@@ -1,7 +1,9 @@
 <?php
+
 namespace MightyCore\Command;
 
-class Make{
+class Make
+{
   private $argv;
 
   public function __construct($args, $func)
@@ -10,7 +12,8 @@ class Make{
     $this->$func();
   }
 
-  private function migration(){
+  private function migration()
+  {
     $connection = 'default';
     if (empty($this->argv[2])) {
       echo 'Please provide a migration name.';
@@ -58,7 +61,8 @@ class ' . $filename . '{
     echo "Migration $filename created successfully in " . DATABASE_PATH . "/Migrations";
   }
 
-    private function seed(){
+  private function seed()
+  {
     $connection = 'default';
     if (empty($this->argv[2])) {
       echo 'Please provide a seed name.';
@@ -93,4 +97,70 @@ class ' . $filename . '{
     echo "Seed $filename created successfully in /Database/Seeds";
   }
 
+
+  private function controller()
+  {
+    if (empty($this->argv[2])) {
+      echo 'Please provide a controller name.';
+      die();
+    } else {
+      $path = $this->argv[2];
+      $pathExplode = explode("/", $path);
+      $className = array_pop($pathExplode);
+      $namespace = implode("\\", $pathExplode);
+
+      $dirname = dirname('Application/Controllers/'.$path.'.php');
+      if (!is_dir($dirname))
+      {
+        mkdir($dirname, 0755, true);
+      }
+      $fp = fopen(DOC_ROOT . "/Application/Controllers/$path.php", 'w');
+      $template = '<?php
+namespace Application\Controllers\\' . $namespace .';
+
+use Application\Controllers\Controller;
+             
+class ' . $className . ' extends Controller
+{
+    
+}
+            ';
+      fwrite($fp, "$template");
+      fclose($fp);
+      echo "Controller created successfully in Application/Controllers/$path.php";
+    }
+  }
+
+  private function model()
+  {
+    if (empty($this->argv[2])) {
+      echo 'Please provide a model name.';
+      die();
+    } else {
+      $path = $this->argv[2];
+      $pathExplode = explode("/", $path);
+      $className = array_pop($pathExplode);
+      $namespace = implode("\\", $pathExplode);
+
+      $dirname = dirname('Application/Models/'.$path.'.php');
+      if (!is_dir($dirname))
+      {
+        mkdir($dirname, 0755, true);
+      }
+      $fp = fopen(DOC_ROOT . "/Application/Models/$path.php", 'w');
+      $template = '<?php
+namespace Application\Models\\' . $namespace .';
+
+use MightyCore\Database\Model;
+             
+class ' . $className . ' extends Model
+{
+    
+}
+            ';
+      fwrite($fp, "$template");
+      fclose($fp);
+      echo "Model created successfully in Application/Models/$path.php";
+    }
+  }
 }
