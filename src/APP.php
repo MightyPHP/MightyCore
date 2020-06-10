@@ -2,6 +2,9 @@
 
 namespace MightyCore;
 
+use MightyCore\Routing\Request;
+use MightyCore\Routing\RouteProcessor;
+use MightyCore\Routing\RouteSetter;
 use MightyCore\Utilities\Logger;
 
 class APP
@@ -28,7 +31,7 @@ class APP
          * Secure the request,
          * then start
          */
-        Request::init(Request::secure($request));
+        // Request::init(Request::secure($request));
 
         if (env('APP_ENV') == "production") {
             set_error_handler(array($this, "errorHandler"), E_ALL);
@@ -46,7 +49,8 @@ class APP
     {
         try {
             /**Get routing afer processing */
-            $route = ROUTE::getProccessedRoute(REQUEST::$method);
+            $routeProcessor = new RouteProcessor();
+            $route = $routeProcessor->process();
 
             if ($route === false || empty($route)) {
                 Response::return('Not found', 404);
@@ -55,19 +59,12 @@ class APP
                 Security::csrfCheck($route);
 
                 /**Start to administer middleware */
-                if ($route['middleware']) {
-                    foreach ($route['middleware'] as $k => $v) {
+                if (!empty($route['middlewares'])) {
+                    foreach ($route['middlewares'] as $k => $v) {
                         $v = "Application\\Middlewares\\" . str_replace('/', '\\', $v) . "Middleware";
                         $this_middleware = new $v();
                         $this_middleware->administer();
                         //TODO: if middleware not found?
-                    }
-                }
-
-                /**Start to check for security */
-                if ($route['secure']) {
-                    if (Security::checkAuth()) {
-                        Response::return("Unauthorized", 401);
                     }
                 }
             }
@@ -85,8 +82,25 @@ class APP
 
             /**If method exists, else return 404 */
             if (method_exists($this->class, $route['method'])) {
+                $r = new \ReflectionMethod($controller_class, $route['method']);
+                $params = $r->getParameters();
+                $methodParams = [];
+                foreach ($params as $param) {
+                    $name = $param->getName();
+                    $class = $param->getClass();
+
+                    if(!empty($class)){
+                        $methodParams[] = new $class->name();
+                    }else{
+                        if(!empty($routeProcessor->params[$name])){
+                            $methodParams[] = $routeProcessor->params[$name];
+                        }
+                    }
+                }
+
                 $func = $route['method'];
-                $return = $this->class->$func();
+                $return = call_user_func_array(array($controller_class, $func), $methodParams);
+
                 if (!empty($return)) {
                     Response::return($return);
                 }

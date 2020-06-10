@@ -108,6 +108,9 @@ class ' . $filename . '{
       $pathExplode = explode("/", $path);
       $className = array_pop($pathExplode);
       $namespace = implode("\\", $pathExplode);
+      if(!empty($namespace)){
+        $namespace = "\\".$namespace;
+      }
 
       $dirname = dirname('Application/Controllers/'.$path.'.php');
       if (!is_dir($dirname))
@@ -116,7 +119,7 @@ class ' . $filename . '{
       }
       $fp = fopen(DOC_ROOT . "/Application/Controllers/$path.php", 'w');
       $template = '<?php
-namespace Application\Controllers\\' . $namespace .';
+namespace Application\Controllers' . $namespace .';
 
 use Application\Controllers\Controller;
              
@@ -141,6 +144,9 @@ class ' . $className . ' extends Controller
       $pathExplode = explode("/", $path);
       $className = array_pop($pathExplode);
       $namespace = implode("\\", $pathExplode);
+      if(!empty($namespace)){
+        $namespace = "\\".$namespace;
+      }
 
       $dirname = dirname('Application/Models/'.$path.'.php');
       if (!is_dir($dirname))
@@ -149,7 +155,7 @@ class ' . $className . ' extends Controller
       }
       $fp = fopen(DOC_ROOT . "/Application/Models/$path.php", 'w');
       $template = '<?php
-namespace Application\Models\\' . $namespace .';
+namespace Application\Models' . $namespace .';
 
 use MightyCore\Database\Model;
              
