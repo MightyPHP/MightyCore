@@ -3,7 +3,19 @@ namespace MightyCore\Routing;
 
 class MicroRouter
 {
+  /**
+   * The path of the request
+   *
+   * @var string
+   */
   private $path;
+
+  /**
+   * The method of the request.
+   *
+   * @var string
+   */
+  private $method;
 
   public function __construct($path, $method)
   {
@@ -12,6 +24,14 @@ class MicroRouter
   }
 
   public function use($middlewares){
-    $currentRoute = RouteStore::$routes[$this->path];
+    $middlewares = (array)$middlewares;
+    RouteStore::$routes[$this->method][$this->path]['middlewares'] = $middlewares;
+    dump(RouteStore::$routes);
+    return $this;
+  }
+
+  public function name($name){
+    $url = preg_replace('/(\/[:])\w+/', '', $this->path);
+    RouteStore::$namedRoutes[$name] = $url;
   }
 }

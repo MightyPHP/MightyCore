@@ -61,7 +61,7 @@ class APP
                 /**Start to administer middleware */
                 if (!empty($route['middlewares'])) {
                     foreach ($route['middlewares'] as $k => $v) {
-                        $v = "Application\\Middlewares\\" . str_replace('/', '\\', $v) . "Middleware";
+                        $v = "Application\\Middlewares\\" . str_replace('/', '\\', $v);
                         $this_middleware = new $v();
                         $this_middleware->administer();
                         //TODO: if middleware not found?
@@ -76,7 +76,9 @@ class APP
             if (class_exists($controller_class)) {
                 $this->class = new $controller_class();
             } else {
-                Response::return('Not found', 404);
+                $message = "Class not found: $controller_class";
+                if (env('APP_ENV') == "production") { $message = "Not Found"; }
+                Response::return($message, 404);
                 exit;
             }
 
@@ -105,7 +107,9 @@ class APP
                     Response::return($return);
                 }
             } else {
-                Response::return('Not found', 404);
+                $message = "Method not found: ".$route['method'];
+                if (env('APP_ENV') == "production") { $message = "Not Found"; }
+                Response::return($message, 404);
                 exit;
             }
         } catch (\Throwable $th) {

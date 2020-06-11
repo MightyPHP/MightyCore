@@ -169,4 +169,41 @@ class ' . $className . ' extends Model
       echo "Model created successfully in Application/Models/$path.php";
     }
   }
+
+  private function middleware(){
+    if (empty($this->argv[2])) {
+      echo 'Please provide a middleware name.';
+      die();
+    } else {
+      $path = $this->argv[2];
+      $pathExplode = explode("/", $path);
+      $className = array_pop($pathExplode);
+      $namespace = implode("\\", $pathExplode);
+      if(!empty($namespace)){
+        $namespace = "\\".$namespace;
+      }
+
+      $dirname = dirname('Application/Middlewares/'.$path.'.php');
+      if (!is_dir($dirname))
+      {
+        mkdir($dirname, 0755, true);
+      }
+      $fp = fopen(DOC_ROOT . "/Application/Middlewares/$path.php", 'w');
+      $template = '<?php
+namespace Application\Middlewares' . $namespace .';
+
+use MightyCore\Middleware;
+             
+class ' . $className . ' extends Middleware
+{
+  public function administer(){
+
+  }
+}
+            ';
+      fwrite($fp, "$template");
+      fclose($fp);
+      echo "Middleware created successfully in Application/Middlewares/$path.php";
+    }
+  }
 }

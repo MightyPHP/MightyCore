@@ -37,25 +37,12 @@ class Request
     }
   }
 
-  public function setParams($params, $mould)
-  {
-    $newParams = array();
-
-    /**Bind params to Requests */
-    if (is_array($mould)) {
-      for ($i = 0; $i < sizeof($mould); $i++) {
-        if (isset($params[$i]) && !empty($params[$i])) {
-          $newParams[$mould[$i]] = $params[$i];
-        }
-      }
-      $this->params = $newParams;
-    }
-  }
-
-  public function param($key){
-    return $this->params[$key] ?? null;
-  }
-
+  /**
+   * Returns the request URL querries.
+   *
+   * @param string $key The query name.
+   * @return string The query value.
+   */
   public function query($key){
     return $this->query[$key] ?? null;
   }
