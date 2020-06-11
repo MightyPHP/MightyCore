@@ -26,7 +26,6 @@ class MicroRouter
   public function use($middlewares){
     $middlewares = (array)$middlewares;
     RouteStore::$routes[$this->method][$this->path]['middlewares'] = $middlewares;
-    dump(RouteStore::$routes);
     return $this;
   }
 
