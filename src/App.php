@@ -2,12 +2,11 @@
 
 namespace MightyCore;
 
-use MightyCore\Routing\Request;
+use MightyCore\Http\Response;
 use MightyCore\Routing\RouteProcessor;
-use MightyCore\Routing\RouteSetter;
 use MightyCore\Utilities\Logger;
 
-class APP
+class App
 {
 
     /**
@@ -16,16 +15,16 @@ class APP
      */
     protected $class = Null;
 
+    protected $request;
+
     public function __construct($request, $origin)
     {
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-            Request::$ajax = true;
-        }
-
         /**
          * Starts the SECURITY Module
          */
         Security::init();
+
+        $this->request = new Response();
 
         /**
          * Secure the request,
@@ -42,21 +41,24 @@ class APP
     public function errorHandler($e)
     {
         Logger::error($e);
-        Response::return('Oops, something is broken.', 500);   
+        $this->request->setStatusCode(500);
+        $this->request->send('Oops, something is broken.');
     }
 
     public function callAPP()
     {
         try {
+            ob_start();
             /**Get routing afer processing */
             $routeProcessor = new RouteProcessor();
             $route = $routeProcessor->process();
 
             if ($route === false || empty($route)) {
-                Response::return('Not found', 404);
+                $this->request->setStatusCode(404);
+                $this->request->send('Not found.');
             } else {
                 /**Checks for CSRF */
-                Security::csrfCheck($route);
+                // Security::csrfCheck($route);
 
                 /**Start to administer middleware */
                 if (!empty($route['middlewares'])) {
@@ -78,7 +80,8 @@ class APP
             } else {
                 $message = "Class not found: $controller_class";
                 if (env('APP_ENV') == "production") { $message = "Not Found"; }
-                Response::return($message, 404);
+                $this->request->setStatusCode(404);
+                $this->request->send('Not found.');
                 exit;
             }
 
@@ -104,14 +107,17 @@ class APP
                 $return = call_user_func_array(array($controller_class, $func), $methodParams);
 
                 if (!empty($return)) {
-                    Response::return($return);
+                    $this->request->setStatusCode(200);
+                    $this->request->send($return);
                 }
             } else {
                 $message = "Method not found: ".$route['method'];
                 if (env('APP_ENV') == "production") { $message = "Not Found"; }
-                Response::return($message, 404);
+                $this->request->setStatusCode(404);
+                $this->request->send('Not found.');
                 exit;
             }
+            ob_end_flush();
         } catch (\Throwable $th) {
             throw $th;
         }

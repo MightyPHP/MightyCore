@@ -1,11 +1,11 @@
 <?php
-
-namespace MightyCore\Routing;
+namespace MightyCore\Http;
 
 class Request
 {
   private $query;
   public $method;
+  public $isXhr = false;
   private $params = [];
 
   public function __construct()
@@ -35,6 +35,10 @@ class Request
         throw new \Exception("Unexpected Header");
       }
     }
+
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+      $this->isXhr = true;
+    }
   }
 
   /**
@@ -43,7 +47,8 @@ class Request
    * @param string $key The query name.
    * @return string The query value.
    */
-  public function query($key){
+  public function query($key)
+  {
     return $this->query[$key] ?? null;
   }
 }

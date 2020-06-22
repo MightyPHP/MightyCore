@@ -1,6 +1,8 @@
 <?php
 namespace MightyCore\Routing;
 
+use MightyCore\Http\Request;
+
 class RouteProcessor
 {
   /**
@@ -27,11 +29,14 @@ class RouteProcessor
   public function __construct()
   {
     $this->inbound = substr($_SERVER['REQUEST_URI'], 1, strlen($_SERVER['REQUEST_URI']));
-
+    
     // We would like to strip off any URL queries as they are irrelevant here.
-    if(strpos($this->inbound, "?") > 0 ){
+    if(strpos($this->inbound, "?") >= 0 && strpos($this->inbound, "?") !== false){
       $this->inbound = substr($this->inbound, 0, strpos($this->inbound, "?"));
     }
+
+    // If empty, most likely it is just a '/'. Need this for quicker comparison.
+    if($this->inbound == ''){ $this->inbound = '/'; }
 
     // Initializing a new Request to get request method.
     $request = new Request();
@@ -43,7 +48,7 @@ class RouteProcessor
    *
    * @return array The matched routes.
    */
-  public function process(){   
+  public function process(){
     if(isset(RouteStore::$routes[strtoupper($this->method)][$this->inbound])){
       return RouteStore::$routes[strtoupper($this->method)][$this->inbound];
     }else{
