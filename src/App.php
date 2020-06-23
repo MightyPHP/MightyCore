@@ -114,7 +114,7 @@ class App
                 $message = "Method not found: ".$route['method'];
                 if (env('APP_ENV') == "production") { $message = "Not Found"; }
                 $this->request->setStatusCode(404);
-                $this->request->send('Not found.');
+                $this->request->send($message);
                 exit;
             }
             ob_end_flush();

@@ -35,9 +35,6 @@ class RouteProcessor
       $this->inbound = substr($this->inbound, 0, strpos($this->inbound, "?"));
     }
 
-    // If empty, most likely it is just a '/'. Need this for quicker comparison.
-    if($this->inbound == ''){ $this->inbound = '/'; }
-
     // Initializing a new Request to get request method.
     $request = new Request();
     $this->method = $request->method;
@@ -49,12 +46,14 @@ class RouteProcessor
    * @return array The matched routes.
    */
   public function process(){
+    // dump($this->inbound);
+    // dump(RouteStore::$routes[strtoupper($this->method)]);
     if(isset(RouteStore::$routes[strtoupper($this->method)][$this->inbound])){
       return RouteStore::$routes[strtoupper($this->method)][$this->inbound];
     }else{
       $regex = $this->regexCompare();
       $string = $this->compareString($regex)[0];
-      return RouteStore::$routes[strtoupper($this->method)]['/'.$string];
+      return RouteStore::$routes[strtoupper($this->method)][$string];
     }
   }
 
