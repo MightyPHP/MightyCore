@@ -8,6 +8,7 @@ class Schematic{
   private $pKey = '';
   private $col = '';
   private $type = '';
+  private $unique = '';
   private $attributes = array();
 
   public function __construct($type, $attributes=[]){
@@ -48,6 +49,7 @@ class Schematic{
 
       // build() method starts reading here
       "length" => $length !== false ? "($length)" : '',
+      "binary" => "",
       "null" => " NOT NULL",
       "unsigned" => "",
       "ai" => "",
@@ -101,6 +103,11 @@ class Schematic{
     return $this;
   }
 
+  public function binary(){
+    $this->queryArr[count($this->queryArr)-1]["null"] = ' BINARY';
+    return $this;
+  }
+
   /**
    * Set a column to be nullable.
    *
@@ -119,6 +126,13 @@ class Schematic{
   public function unsigned(){
     $this->queryArr[count($this->queryArr)-1]["unsigned"] = ' UNSIGNED';
     return $this;
+  }
+
+  public function unique(){
+    if($this->unique != ''){
+      $this->unique .= ',';
+    }
+    $this->unique = " UNIQUE INDEX `".$this->col."_UNIQUE` (`$this->col` ASC) VISIBLE";
   }
 
   /**

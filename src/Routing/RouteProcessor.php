@@ -35,6 +35,8 @@ class RouteProcessor
       $this->inbound = substr($this->inbound, 0, strpos($this->inbound, "?"));
     }
 
+    // $this->inbound = "/".$this->inbound;
+
     // Initializing a new Request to get request method.
     $request = new Request();
     $this->method = $request->method;
@@ -52,7 +54,7 @@ class RouteProcessor
       return RouteStore::$routes[strtoupper($this->method)][$this->inbound];
     }else{
       $regex = $this->regexCompare();
-      $string = $this->compareString($regex)[0];
+      $string = "/".$this->compareString($regex)[0];
       return RouteStore::$routes[strtoupper($this->method)][$string];
     }
   }
@@ -93,7 +95,6 @@ class RouteProcessor
 
       // Removes all parameter bindings syntax.
       $url = preg_replace('/(\/[:])\w+/', '', $value);
-
       $inboundExplode = explode("/", $this->inbound);
       
       // We are splicing the remaining unmatched slahes to be populated as parameters.

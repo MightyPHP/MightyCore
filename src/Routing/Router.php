@@ -43,7 +43,7 @@ class Router
    * @return void
    */
   private function setPath($type, $path, $destination){
-    $path = $this->scope != '' ? $this->scope.'/'.$path : $path;
+    $path = $this->scope != '' ? $this->scope . $path : $path;
     
     preg_match_all('/(\/[:])\w+/', $path, $output);
     $params = $output[0];
@@ -75,7 +75,7 @@ class Router
    */
   public function get($path, $destination){
     $this->setPath('GET', $path, $destination);
-    $path = $this->scope != '' ? $this->scope.'/'.$path : $path;
+    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'GET');
   }
 
@@ -88,7 +88,7 @@ class Router
    */
   public function post($path, $destination){
     $this->setPath('POST', $path, $destination);
-    $path = $this->scope != '' ? $this->scope.'/'.$path : $path;
+    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'POST');
   }
 
@@ -101,7 +101,7 @@ class Router
    */
   public function delete($path, $destination){
     $this->setPath('DELETE', $path, $destination);
-    $path = $this->scope != '' ? $this->scope.'/'.$path : $path;
+    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'DELETE');
   }
 
@@ -114,7 +114,7 @@ class Router
    */
   public function put($path, $destination){
     $this->setPath('PUT', $path, $destination);
-    $path = $this->scope != '' ? $this->scope.'/'.$path : $path;
+    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'PUT');
   }
 }
