@@ -128,6 +128,11 @@ class Schematic{
     return $this;
   }
 
+  /**
+   * Sets a column to be unique with index.
+   *
+   * @return void
+   */
   public function unique(){
     if($this->unique != ''){
       $this->unique .= ',';
