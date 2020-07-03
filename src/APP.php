@@ -22,6 +22,11 @@ class APP {
          */
         SessionManager::sessionStart();
 
+        foreach (glob( DOC_ROOT."/Routes/*.php") as $filename)
+        {
+            include_once $filename;
+        }
+
         /**
          * Get ENV Variables
          */
