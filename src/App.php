@@ -104,7 +104,7 @@ class App
                 }
 
                 $func = $route['method'];
-                $return = call_user_func_array(array($controller_class, $func), $methodParams);
+                $return = call_user_func_array(array($this->class, $func), $methodParams);
 
                 if (!empty($return)) {
                     $this->request->setStatusCode(200);
