@@ -86,8 +86,16 @@ function trans($data){
  * @return string
  */
 function view($view, $data) {
-  $class = new \MightyCore\VIEW($view);
+  $class = new \MightyCore\View($view);
   return $class->render($data);
+}
+
+function route($path){
+  $route = '';
+  if(!empty(MightyCore\Routing\RouteStore::$namedRoutes[$path])){
+      $route = MightyCore\Routing\RouteStore::$namedRoutes[$path];
+  }
+  return $route;
 }
 
 /**

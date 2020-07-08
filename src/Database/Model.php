@@ -92,7 +92,7 @@ class Model
         $this->log = true;
     }
 
-    private function execute()
+    public function execute()
     {
         $query = $this->queryBuilder();
         $query = $this->db->prepare($query);
@@ -120,8 +120,16 @@ class Model
         );
     }
 
-    protected function raw($query){
+    /**
+     * Creates a raw query for query builder.
+     *
+     * @param string $query The query string.
+     * @param array $params The parameters to the query.
+     * @return void
+     */
+    protected function raw($query, $params){
         $this->_main = $query;
+        $this->_params = $params;
         return $this;
     }
 

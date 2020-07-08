@@ -5,6 +5,7 @@ class Request
 {
   private $query;
   public $method;
+  public $uri;
   public $isXhr = false;
   private $params = [];
 
@@ -21,6 +22,8 @@ class Request
      * Sets the query from request
      */
     $this->query = $query;
+
+    $this->uri = "{$_SERVER['REQUEST_URI']}";
 
     /**
      * Sets request methods

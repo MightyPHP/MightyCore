@@ -1,5 +1,8 @@
 <?php
 namespace MightyCore;
+
+use MightyCore\Http\Request;
+
 class VIEW {
 
     protected $_view;
@@ -72,11 +75,7 @@ class VIEW {
              * route() function
              */
             $routeFunction = new \Twig\TwigFunction('route', function ($value) {
-                $route = '';
-                if(!empty(ROUTE::getNamedRoutes()[$value])){
-                    $route = ROUTE::getNamedRoutes()[$value];
-                }
-                return $route;
+                return route($value);
             });
             $twig->addFunction($routeFunction);
 
@@ -100,7 +99,7 @@ class VIEW {
              * return() function
              */
             $returnFunction = new \Twig\TwigFunction('return', function ($value, $args=[]) {
-                return new \Twig_Markup($this->mapControllers($value, $args), "utf-8");
+                return new \Twig\Markup($this->mapControllers($value, $args), "utf-8");
             });
             $twig->addFunction($returnFunction);
 
@@ -117,7 +116,10 @@ class VIEW {
                 $data = array();
             }
             
-            $twig->addGlobal('session', $_SESSION);
+            $twig->addGlobal('app', [
+                'session' => $_SESSION,
+                'request' => new Request()
+            ]);
             return $twig->render('twig', $data);
         }
     }
