@@ -43,13 +43,14 @@ class Router
    * @return void
    */
   private function setPath($type, $path, $destination){
-    $path = $this->scope != '' ? $this->scope . $path : $path;
-    
-    preg_match_all('/(\/[:])\w+/', $path, $output);
+    // If path is root, make sure to remove a trailing slash when combined with scope.
+    if($path !== ''){
+      if(substr($this->scope, -1) == '/'){
+        $this->scope = substr($this->scope, 0, -1);
+      }
+    }
 
-    $url = preg_replace('/(\/[:])\w+/', '', $path);
-    // echo $url;
-    $url = explode('/', $url);
+    $path = $this->scope . $path;
 
     $destinationExplode = explode("@", $destination);
     $controller = $destinationExplode[0];
@@ -74,11 +75,12 @@ class Router
    */
   public function get($path, $destination){
     // Prevent trailing slash in URL
-    if(substr($path, -1) == '/'){
+    if($path == '/' && substr($path, -1) == '/'){
       $path = substr($path, 0, -1);
     }
+
+    // $path = $this->scope . $path;
     $this->setPath('GET', $path, $destination);
-    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'GET');
   }
 
@@ -94,8 +96,9 @@ class Router
     if(substr($path, -1) == '/'){
       $path = substr($path, 0, -1);
     }
+
+    // $path = $this->scope . $path;
     $this->setPath('POST', $path, $destination);
-    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'POST');
   }
 
@@ -111,8 +114,9 @@ class Router
     if(substr($path, -1) == '/'){
       $path = substr($path, 0, -1);
     }
+
+    // $path = $this->scope . $path;
     $this->setPath('DELETE', $path, $destination);
-    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'DELETE');
   }
 
@@ -128,8 +132,9 @@ class Router
     if(substr($path, -1) == '/'){
       $path = substr($path, 0, -1);
     }
+
+    // $path = $this->scope . $path;
     $this->setPath('PUT', $path, $destination);
-    $path = $this->scope != '' ? $this->scope . $path : $path;
     return new MicroRouter($path, 'PUT');
   }
 }

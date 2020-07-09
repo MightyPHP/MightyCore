@@ -117,6 +117,9 @@ if (!array_key_exists('HTTP_ORIGIN', $_SERVER) && !empty($_SERVER['SERVER_NAME']
   $_SERVER['HTTP_ORIGIN'] = $_SERVER['SERVER_NAME'];
 }
 
-function dump($toPrint){
-  echo "<pre>".print_r($toPrint, true)."</pre>";
+function dump(...$args){
+  if(count($args) == 1){
+    $args = $args[0];
+  }
+  echo "<pre>".print_r($args, true)."</pre>";
 }

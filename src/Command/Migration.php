@@ -99,14 +99,31 @@ class Migration
   {
     $db = 'default';
     $servername = env('DB_' . strtoupper($db) . '_HOST');
+    $port = env('DB_' . strtoupper($db) . '_PORT');
     $username = env('DB_' . strtoupper($db) . '_USERNAME');
     $password = env('DB_' . strtoupper($db) . '_PASSWORD');
     $database = env('DB_' . strtoupper($db) . '_DATABASE');
     try {
-      $db = new \PDO("mysql:host=$servername", $username, $password);
+      $db = new \PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
       $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-      $stmt = $db->prepare("CREATE DATABASE IF NOT EXISTS $database;");
+      $stmt = $db->prepare("SHOW TABLES LIKE 'migrations'");
       $stmt->execute();
+      $data = $stmt->fetch(\PDO::FETCH_OBJ);
+
+      /**
+       * Check if Migrations table exist
+       * if not, create
+       */
+      if ($data === false) {
+        $stmt = $db->prepare("CREATE TABLE migrations (
+                    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    migration VARCHAR(255) NOT NULL,
+                    batch INT(11) NOT NULL,
+                    created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    modified_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    )");
+        $stmt->execute();
+      }
 
       $stmt = $db->prepare("SELECT MAX(batch) as batch FROM $database.migrations");
       $stmt->execute();
@@ -204,24 +221,6 @@ class Migration
     try {
       $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
       $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-      $stmt = $db->prepare("SHOW TABLES LIKE 'migrations'");
-      $stmt->execute();
-      $data = $stmt->fetch(\PDO::FETCH_OBJ);
-
-      /**
-       * Check if SEEDS table exist
-       * if not, create
-       */
-      if ($data === false) {
-        $stmt = $db->prepare("CREATE TABLE migrations (
-                    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                    migration VARCHAR(255) NOT NULL,
-                    batch INT(11) NOT NULL,
-                    created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    modified_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                    )");
-        $stmt->execute();
-      }
 
       /**
        * Insert into DB

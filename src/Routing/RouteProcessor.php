@@ -1,4 +1,5 @@
 <?php
+
 namespace MightyCore\Routing;
 
 use MightyCore\Http\Request;
@@ -29,13 +30,13 @@ class RouteProcessor
   public function __construct()
   {
     $this->inbound = substr($_SERVER['REQUEST_URI'], 1, strlen($_SERVER['REQUEST_URI']));
-    
+
     // We would like to strip off any URL queries as they are irrelevant here.
-    if(strpos($this->inbound, "?") >= 0 && strpos($this->inbound, "?") !== false){
+    if (strpos($this->inbound, "?") >= 0 && strpos($this->inbound, "?") !== false) {
       $this->inbound = substr($this->inbound, 0, strpos($this->inbound, "?"));
     }
 
-    $this->inbound = "/".$this->inbound;
+    $this->inbound = "/" . $this->inbound;
 
     // Initializing a new Request to get request method.
     $request = new Request();
@@ -47,14 +48,86 @@ class RouteProcessor
    *
    * @return array The matched routes.
    */
-  public function process(){
-    if(isset(RouteStore::$routes[strtoupper($this->method)][$this->inbound])){
+  public function process()
+  {
+    if (isset(RouteStore::$routes[strtoupper($this->method)][$this->inbound])) {
       return RouteStore::$routes[strtoupper($this->method)][$this->inbound];
-    }else{
+    } else {
       $regex = $this->regexCompare();
-      $string = "/".$this->compareString($regex)[0];
+      $string = $this->compareString($regex)[0];
       return RouteStore::$routes[strtoupper($this->method)][$string];
     }
+  }
+
+  /**
+   * Match wild cards
+   *
+   * Check if any wild cards are supplied.
+   *
+   * This will return false if there is a mis-match anywhere in the route, 
+   * or it will return an array with the key => values being the user supplied variable names.
+   *
+   * If no variable names are supplied an empty array will be returned.
+   *
+   * TODO - Support for custom regex
+   *
+   * @param string $route The user-supplied route (with wild cards) to match against
+   *
+   * @return mixed
+   */
+  private function match_wild_cards()
+  {
+    $variables = array();
+
+    $exp_request = explode('/', $this->inbound);
+
+    foreach (RouteStore::$routes[strtoupper($this->method)] as $route => $value) {
+      $exp_route = explode('/', $route);
+      $matched = false;
+      if (count($exp_request) == count($exp_route)) {
+        foreach ($exp_route as $key => $value) {
+          if ($value == $exp_request[$key]) {
+            // So far the routes are matching
+            continue;
+          } elseif ($value[0] == ':') {
+            // A wild card has been supplied in the route at this position
+            $strip = str_replace(':', '', $value);
+            // $exp = explode(':', $strip);
+
+            // $wc_type = $exp[0];
+
+            // if (array_key_exists($wc_type, $this->wild_cards)) {
+              // Check if the regex pattern matches the supplied route segment
+              // $pattern = $this->wild_cards[$wc_type];
+
+              // if (preg_match($pattern, $exp_request[$key])) {
+              //   if (isset($exp[1])) {
+                  // A variable was supplied, let's assign it
+                  $this->params[$strip] = $exp_request[$key];
+                // }
+
+                // We have a matching pattern
+                continue;
+              // }
+            // }
+          }else{
+            // There is a mis-match
+            break;
+          }
+
+          if($key == count($exp_route) - 1){
+            $matched = $route;
+          }
+        }
+
+        // All segments match
+        if($matched !== false){
+          return $matched;
+        }
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -62,17 +135,18 @@ class RouteProcessor
    *
    * @return array The filtered routes.
    */
-  private function regexCompare(){
+  private function regexCompare()
+  {
     $inbound = explode('/', $this->inbound);
     $string = '';
     $matches = [];
     foreach ($inbound as $value) {
-      $string .= $string == '' ? '(\b'.$value.'\b)' : '\/'.'(\b'.$value.'\b)';
-      $regex = '/('.$string.')\S+/';
+      $string .= $string == '' ? '(\b' . $value . '\b)' : '\/' . '(\b' . $value . '\b)';
+      $regex = '/(' . $string . ')\S+/';
       preg_match_all($regex, RouteStore::$routesString[$this->method], $output_array);
-      if(!empty($output_array[0])){
+      if (!empty($output_array[0])) {
         $matches = $output_array[0];
-      }else{
+      } else {
         break;
       }
     }
@@ -85,7 +159,8 @@ class RouteProcessor
    * @param array $regexMatches The regex filtered routes.
    * @return array The filtered compared routes.
    */
-  private function compareString($regexMatches){
+  private function compareString($regexMatches)
+  {
     $matches = [];
     foreach ($regexMatches as $value) {
       // Extract all parameter bindings.
@@ -94,7 +169,7 @@ class RouteProcessor
       // Removes all parameter bindings syntax.
       $url = preg_replace('/(\/[:])\w+/', '', $value);
       $inboundExplode = explode("/", $this->inbound);
-      
+
       // We are splicing the remaining unmatched slahes to be populated as parameters.
       $values = array_splice($inboundExplode, -1);
       foreach ($output[1] as $key => $param) {
