@@ -53,8 +53,9 @@ class RouteProcessor
     if (isset(RouteStore::$routes[strtoupper($this->method)][$this->inbound])) {
       return RouteStore::$routes[strtoupper($this->method)][$this->inbound];
     } else {
-      $regex = $this->regexCompare();
-      $string = $this->compareString($regex)[0];
+      $string = $this->match_wild_cards();
+      // $regex = $this->regexCompare();
+      // $string = $this->compareString($regex)[0];
       return RouteStore::$routes[strtoupper($this->method)][$string];
     }
   }
@@ -77,11 +78,9 @@ class RouteProcessor
    */
   private function match_wild_cards()
   {
-    $variables = array();
-
     $exp_request = explode('/', $this->inbound);
-
     foreach (RouteStore::$routes[strtoupper($this->method)] as $route => $value) {
+      // dump(RouteStore::$routes);
       $exp_route = explode('/', $route);
       $matched = false;
       if (count($exp_request) == count($exp_route)) {
@@ -93,7 +92,6 @@ class RouteProcessor
             // A wild card has been supplied in the route at this position
             $strip = str_replace(':', '', $value);
             // $exp = explode(':', $strip);
-
             // $wc_type = $exp[0];
 
             // if (array_key_exists($wc_type, $this->wild_cards)) {
@@ -107,17 +105,17 @@ class RouteProcessor
                 // }
 
                 // We have a matching pattern
-                continue;
+                if($key == count($exp_route) - 1){
+                  $matched = $route;
+                }else{
+                  continue;
+                }
               // }
             // }
           }else{
             // There is a mis-match
             break;
-          }
-
-          if($key == count($exp_route) - 1){
-            $matched = $route;
-          }
+          } 
         }
 
         // All segments match
