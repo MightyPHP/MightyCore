@@ -145,11 +145,12 @@ class Migration
   {
     $db = 'default';
     $servername = env('DB_' . strtoupper($db) . '_HOST');
+    $port = env('DB_' . strtoupper($db) . '_PORT');
     $username = env('DB_' . strtoupper($db) . '_USERNAME');
     $password = env('DB_' . strtoupper($db) . '_PASSWORD');
     $database = env('DB_' . strtoupper($db) . '_DATABASE');
     try {
-      $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+      $db = new \PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
       $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
       $stmt = $db->prepare("SHOW TABLES LIKE 'migrations'");
       $stmt->execute();
