@@ -2,7 +2,6 @@
 namespace MightyCore;
 class VERSION{
     public static function getVersion(){
-        return "v0.0.5";
+        return "v1.0.0";
     }
 }
-?>
