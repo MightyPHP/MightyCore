@@ -81,7 +81,7 @@ class App
                 $message = "Class not found: $controller_class";
                 if (env('APP_ENV') == "production") { $message = "Not Found"; }
                 $this->request->setStatusCode(404);
-                $this->request->send('Not found.');
+                $this->request->send($message);
                 exit;
             }
 
