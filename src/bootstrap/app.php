@@ -101,7 +101,9 @@ function route($path){
 /**
  * To set default time zone
  */
-date_default_timezone_set(env('DEFAULT_TIMEZONE'));
+if(env('DEFAULT_TIMEZONE') !== false){
+  date_default_timezone_set(env('DEFAULT_TIMEZONE'));
+}
 
 if(env('APP_ENV') == 'develop'){
   ini_set('display_errors',true);
