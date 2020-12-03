@@ -30,6 +30,10 @@ class RouteProcessor
   public function __construct()
   {
     $this->inbound = substr($_SERVER['REQUEST_URI'], 1, strlen($_SERVER['REQUEST_URI']));
+    
+    if(substr($this->inbound, -1) == "/"){
+      $this->inbound = substr($this->inbound, 0, strlen($this->inbound)-1);
+    }
 
     // We would like to strip off any URL queries as they are irrelevant here.
     if (strpos($this->inbound, "?") >= 0 && strpos($this->inbound, "?") !== false) {
@@ -37,6 +41,15 @@ class RouteProcessor
     }
 
     $this->inbound = "/" . $this->inbound;
+    $offset = env("URL_OFFSET", "");
+    if($offset != ""){
+      $len = strlen($offset);
+
+      if(substr($this->inbound, 0, $len) === $offset){
+        $this->inbound = substr($this->inbound, $len, strlen($this->inbound));
+        $this->inbound = "/" . $this->inbound;
+      }
+    }
 
     // Initializing a new Request to get request method.
     $request = new Request();
@@ -54,8 +67,9 @@ class RouteProcessor
       return RouteStore::$routes[strtoupper($this->method)][$this->inbound];
     } else {
       $string = $this->match_wild_cards();
-      // $regex = $this->regexCompare();
-      // $string = $this->compareString($regex)[0];
+      if(empty($string)){
+        return [];
+      }
       return RouteStore::$routes[strtoupper($this->method)][$string];
     }
   }
@@ -88,38 +102,27 @@ class RouteProcessor
           if ($value == $exp_request[$key]) {
             // So far the routes are matching
             continue;
-          } elseif ($value[0] == ':') {
+          } elseif ($value && $value[0] && $value[0] == ':') {
             // A wild card has been supplied in the route at this position
             $strip = str_replace(':', '', $value);
-            // $exp = explode(':', $strip);
-            // $wc_type = $exp[0];
 
-            // if (array_key_exists($wc_type, $this->wild_cards)) {
-              // Check if the regex pattern matches the supplied route segment
-              // $pattern = $this->wild_cards[$wc_type];
+            // A variable was supplied, let's assign it
+            $this->params[$strip] = $exp_request[$key];
 
-              // if (preg_match($pattern, $exp_request[$key])) {
-              //   if (isset($exp[1])) {
-                  // A variable was supplied, let's assign it
-                  $this->params[$strip] = $exp_request[$key];
-                // }
-
-                // We have a matching pattern
-                if($key == count($exp_route) - 1){
-                  $matched = $route;
-                }else{
-                  continue;
-                }
-              // }
-            // }
-          }else{
+            // We have a matching pattern
+            if ($key == count($exp_route) - 1) {
+              $matched = $route;
+            } else {
+              continue;
+            }
+          } else {
             // There is a mis-match
             break;
-          } 
+          }
         }
 
         // All segments match
-        if($matched !== false){
+        if ($matched !== false) {
           return $matched;
         }
       }

@@ -63,6 +63,12 @@ class Router
       "method" => $method
     );
 
+    if(!isset(RouteStore::$routesString[$type])){
+      /**
+       * Initialize routestring store
+       */
+      RouteStore::$routesString[$type] = "";
+    }
     RouteStore::$routesString[$type] .= ' '.$path; 
   }
 
