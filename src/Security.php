@@ -9,7 +9,6 @@ class Security
     /* Security config */
 
     public $_config = null;
-    private $_db = null;
     public $auth = null;
 
     /**
