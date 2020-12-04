@@ -92,10 +92,10 @@ class App
                 $methodParams = [];
                 foreach ($params as $param) {
                     $name = $param->getName();
-                    $class = $param->getClass();
+                    $class = $param->getType() ? $param->getType()->getName() : null;
 
-                    if(!empty($class)){
-                        $methodParams[] = new $class->name();
+                    if($class != null && class_exists($class)){
+                        $methodParams[] = new $class();
                     }else{
                         if(!empty($routeProcessor->params[$name])){
                             $methodParams[] = $routeProcessor->params[$name];
