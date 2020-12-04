@@ -29,10 +29,10 @@ if(file_exists ( DOC_ROOT . ".env" )){
  * Grab ENV value
  * 
  * @param string  $env   The env key to obtain
- * @param any $default  The default value to return if env not found
- * @return  any
+ * @param bool $default  The default value to return if env not found
+ * @return string|bool
  */
-function env($env, $default=false){
+function env(string $env, bool $default=false){
   if(getenv($env)){
     $env = getenv($env);
     if(preg_match('/^(["\']).*\1$/m', $env)){
@@ -80,16 +80,22 @@ function trans($data){
 /**
  * Global View function
  * 
- * @param string $view
- * @param string $template
- * 
+ * @param string $view The view relative to View folder
+ * @param array $data The data to pass to view
  * @return string
  */
-function view($view, $data) {
+function view(string $view, array $data = []) {
   $class = new \MightyCore\View($view);
   return $class->render($data);
 }
 
+/**
+ * Return path based on route name
+ * 
+ * @param string $path The path name
+ * 
+ * @return string The requested path
+ */
 function route($path){
   $route = '';
   if(!empty(MightyCore\Routing\RouteStore::$namedRoutes[$path])){
