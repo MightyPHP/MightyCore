@@ -48,10 +48,14 @@ class Request
    * Returns the request URL querries.
    *
    * @param string $key The query name.
-   * @return string The query value.
+   * @return string|array The query value or array of all queries.
    */
-  public function query($key)
+  public function query(?string $key = "") : array
   {
+    if(empty($key)){
+      return $this->query;
+    }
+
     return $this->query[$key] ?? null;
   }
 }
