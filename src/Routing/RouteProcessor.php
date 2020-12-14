@@ -31,6 +31,9 @@ class RouteProcessor
   {
     $this->inbound = substr($_SERVER['REQUEST_URI'], 1, strlen($_SERVER['REQUEST_URI']));
     
+    /**
+     * Ends with /
+     */
     if(substr($this->inbound, -1) == "/"){
       $this->inbound = substr($this->inbound, 0, strlen($this->inbound)-1);
     }
@@ -40,14 +43,19 @@ class RouteProcessor
       $this->inbound = substr($this->inbound, 0, strpos($this->inbound, "?"));
     }
 
-    $this->inbound = "/" . $this->inbound;
+    /**
+     * If not start with /
+     */
+    if(substr($this->inbound, 0) != "/"){
+      $this->inbound = "/" . $this->inbound;
+    }
+
     $offset = env("URL_OFFSET", "");
     if($offset != ""){
       $len = strlen($offset);
 
       if(substr($this->inbound, 0, $len) === $offset){
         $this->inbound = substr($this->inbound, $len, strlen($this->inbound));
-        $this->inbound = "/" . $this->inbound;
       }
     }
 
