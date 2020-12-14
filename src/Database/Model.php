@@ -2,6 +2,7 @@
 
 namespace MightyCore\Database;
 
+use http\Exception;
 use PDO;
 
 class Model
@@ -57,7 +58,13 @@ class Model
         '<>',
         '!='
     ];
-    
+
+    /**
+     * Stores the properties of the table.
+     * @var array
+     */
+    private $_properties = [];
+
     public function __construct()
     {
         /**
@@ -73,22 +80,43 @@ class Model
             $db = new PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->db = $db;
+
+            /**
+             * Set default table to class name without Model suffix, if not set
+             */
+            if ($this->table === null) {
+                $tableClassPath = get_called_class();
+                $tableClassPathExplode = explode("\\", $tableClassPath);
+                $tableClass = end($tableClassPathExplode);
+                $this->table = strtolower(str_replace('Model', '', $tableClass));
+            }
+
+            $this->getProperties($this->table);
         } catch (\PDOException $e) {
             throw $e;
         }
+    }
 
-        /**
-         * Set default table to class name without Model suffix, if not set
-         */
-        if($this->table === null){
-            $tableClassPath = get_called_class();
-            $tableClassPathExplode = explode("\\", $tableClassPath);
-            $tableClass = end($tableClassPathExplode);
-            $this->table = strtolower(str_replace('Model', '', $tableClass));
+    /**
+     * Gets the properties of the table
+     */
+    private function getProperties($table)
+    {
+        $describe = $this->db->prepare("DESCRIBE $table");
+        $describe->execute();
+        $properties = $describe->fetchAll(PDO::FETCH_OBJ);
+
+        foreach ($properties as $property) {
+            $this->_properties[] = $property;
         }
     }
 
-    protected function startLog(){
+    private function createProperty($name, $value){
+        $this->{$name} = $value;
+    }
+
+    protected function startLog()
+    {
         $this->log = true;
     }
 
@@ -112,7 +140,8 @@ class Model
         return $query;
     }
 
-    public function getQuery(){
+    public function getQuery()
+    {
         $query = $this->queryBuilder();
         return array(
             'query' => $query,
@@ -127,7 +156,8 @@ class Model
      * @param array $params The parameters to the query.
      * @return void
      */
-    protected function raw($query, $params){
+    protected function raw($query, $params)
+    {
         $this->_main = $query;
         $this->_params = $params;
         return $this;
@@ -180,7 +210,7 @@ class Model
             $updateQuery .= " $key = ? ";
             $this->_updateParams[] = $value;
         }
-        
+
         $this->_main = "UPDATE $this->table " . $this->_join . " SET $updateQuery";
         $this->execute();
     }
@@ -190,7 +220,7 @@ class Model
      */
     private function queryBuilder()
     {
-        if($this->_main === ''){
+        if ($this->_main === '') {
             $this->_main = "SELECT * FROM $this->table ";
         }
 
@@ -247,7 +277,8 @@ class Model
         return $this;
     }
 
-    public function delete(){
+    public function delete()
+    {
         $this->_main = "DELETE FROM $this->table ";
         $this->execute();
     }
@@ -388,5 +419,44 @@ class Model
     private function joinProcessor($mode, $args)
     {
         $this->_join .= " $mode $args[0] ON $args[1] $args[2] $args[3] ";
+    }
+
+    /**
+     * Performs save on a new or updated model object
+     *
+     * @return int The last insert or update id
+     */
+    public function save(){
+        // Initial primary key variable as null
+        $primaryKey = null;
+
+        // Parameters for any insert or update action
+        $params = array();
+
+        // Loop through the table's properties
+        foreach($this->_properties as $property){
+
+            // Find the primary key of the table
+            if($primaryKey == null && $property->Key == "PRI"){
+                $primaryKey = $property;
+            }
+
+           // Populate parameters
+            if(!property_exists($this, $property->Field)){
+                // If property is not declared in model, throws the error
+                throw new \Exception("Property $property->Field found but is not declared in model.");
+            }else{
+                $params[$property->Field] = $this->{$property->Field};
+            }
+        }
+
+        if($this->{$primaryKey->Field} == null){
+            // Primary key is null, this is not an update
+            return $this->insert($params);
+        }else{
+            // Primary key is not null, this is an update
+            $this->where($primaryKey->Field, $this->{$primaryKey->Field})->update($params);
+            return $this->{$primaryKey->Field};
+        }
     }
 }
