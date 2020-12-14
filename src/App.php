@@ -47,8 +47,8 @@ class App
 
     public function callAPP()
     {
+        ob_start();
         try {
-            ob_start();
             /**Get routing afer processing */
             $routeProcessor = new RouteProcessor();
             $route = $routeProcessor->process();
@@ -117,9 +117,33 @@ class App
                 $this->request->send($message);
                 exit;
             }
-            ob_end_flush();
-        } catch (\Throwable $th) {
-            throw $th;
+        } catch (\Error $err) {
+            if(env("APP_ENV") != null && env("APP_ENV") == "production"){
+                // Production environment, show generic error page
+                $this->request->setStatusCode(500);
+                $this->request->send("Oops. Something went wrong.");
+                exit;
+            }
+        } catch (\Exception $ex){
+            if(env("APP_ENV") != null && env("APP_ENV") == "development"){
+                // Development environment, throw full stack trace
+                \MightyCore\Exception\Template::generateStack($ex->getMessage(), $ex->getTrace());
+            }
+
+            if(env("APP_ENV") != null && env("APP_ENV") == "production"){
+                // Production environment, show generic error page
+                $this->request->setStatusCode(500);
+                $this->request->send("Oops. Something went wrong.");
+                exit;
+            }
+        } catch (\Throwable $th){
+            if(env("APP_ENV") != null && env("APP_ENV") == "production"){
+                // Production environment, show generic error page
+                $this->request->setStatusCode(500);
+                $this->request->send("Oops. Something went wrong.");
+                exit;
+            }
         }
+        ob_end_flush();
     }
 }
