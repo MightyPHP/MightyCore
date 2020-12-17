@@ -65,7 +65,7 @@ class Model
      */
     private $_properties = [];
 
-    public function __construct()
+    public function __construct($properties = array())
     {
         /**
          * Establish Connecetion with Database
@@ -92,6 +92,13 @@ class Model
             }
 
             $this->getProperties($this->table);
+
+            // Initialize invoked properties
+            if(is_array($properties) && !empty($properties)){
+                foreach ($properties as $property => $value){
+                    $this->{$property} = $value;
+                }
+            }
         } catch (\PDOException $e) {
             throw $e;
         }
@@ -170,17 +177,16 @@ class Model
      */
     public function get()
     {
-        return $this->execute()->fetchAll(PDO::FETCH_OBJ);
-    }
+        $objects = $this->execute()->fetchAll(PDO::FETCH_OBJ);
 
-    /**
-     * Gets the result of a query. Usually with SELECT statement
-     * 
-     * @return array The query fetch results in associative array
-     */
-    public function getArr()
-    {
-        return $this->execute()->fetchAll(PDO::FETCH_ASSOC);
+        // Initialize model object array
+        $modelObjects = array();
+        foreach($objects as $object){
+            $class = get_called_class();
+            $modelObjects[]  = new $class((array)$object);
+        }
+
+        return $modelObjects;
     }
 
     /**
@@ -190,7 +196,15 @@ class Model
      */
     public function getOne()
     {
-        return $this->execute()->fetch(PDO::FETCH_OBJ);
+        $attributes = $this->execute()->fetch(PDO::FETCH_OBJ);
+        if($attributes) {
+            foreach ($attributes as $attribute => $value) {
+                $this->{$attribute} = $value;
+            }
+            return $this;
+        }else{
+            return null;
+        }
     }
 
     /**
