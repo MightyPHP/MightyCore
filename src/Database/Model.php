@@ -3,6 +3,7 @@
 namespace MightyCore\Database;
 
 use http\Exception;
+use MightyCore\Database\Helpers\IncludeHelper;
 use PDO;
 
 class Model
@@ -44,6 +45,8 @@ class Model
     private $_params = array();
     private $_updateParams = array();
 
+    private array $_include = [];
+
     /**
      * Stores the permitted SQL operators
      *
@@ -64,6 +67,8 @@ class Model
      * @var array
      */
     private $_properties = [];
+
+    private $_primaryKeyColumn = '';
 
     public function __construct($properties = array())
     {
@@ -115,6 +120,10 @@ class Model
 
         foreach ($properties as $property) {
             $this->_properties[] = $property;
+
+            if($property->Key == "PRI"){
+                $this->_primaryKeyColumn = $property->Field;
+            }
         }
     }
 
@@ -183,7 +192,17 @@ class Model
         $modelObjects = array();
         foreach($objects as $object){
             $class = get_called_class();
-            $modelObjects[]  = new $class((array)$object);
+            $invokedClass = new $class((array)$object);
+
+            foreach ($this->_include as $include){
+                $includeClassName = (new \ReflectionClass($include->class))->getShortName();
+                $includeClassName = str_replace("Model", "", $includeClassName);
+                $includeClassName = lcfirst($includeClassName);
+                $invokedClass->{$includeClassName} = $include->class->where($include->foreignColumn, $object->{$include->localColumn})
+                                        ->get();
+            }
+
+            $modelObjects[]  = $invokedClass;
         }
 
         return $modelObjects;
@@ -201,6 +220,15 @@ class Model
             foreach ($attributes as $attribute => $value) {
                 $this->{$attribute} = $value;
             }
+
+            foreach ($this->_include as $include){
+                $includeClassName = (new \ReflectionClass($include->class))->getShortName();
+                $includeClassName = str_replace("Model", "", $includeClassName);
+                $includeClassName = lcfirst($includeClassName);
+                $this->{$includeClassName} = $include->class->where($include->foreignColumn, $this->{$include->localColumn})
+                    ->get();
+            }
+
             return $this;
         }else{
             return null;
@@ -297,11 +325,20 @@ class Model
         $this->execute();
     }
 
+    /**
+     * Proccess where clauses into querries
+     *
+     * @param $args The arguments of the where clause
+     * @param $type This is either OR or AND
+     * @return $this
+     */
     private function whereProcessor($args, $type)
     {
+        // Check if this where clause is the first
         $first = false;
         if ($this->_where == "") {
             $first = true;
+            // If it is, append WHERE in the query
             $this->_where = " WHERE ";
         }
         $index = 0;
@@ -313,10 +350,11 @@ class Model
                 $this->_where .= " $value ";
             }
             if ($index == 1) {
-                //check for operations
+                // Check for operations
                 if (\in_array($value, $this->_comparisonOperators) && !is_int($value)) {
                     $this->_where .= " $value ";
                 } else {
+                    // If operations not found, regard this as an equal type comparison
                     $this->_where .= " =? ";
                     $this->_params[] = $value;
                 }
@@ -432,7 +470,32 @@ class Model
 
     private function joinProcessor($mode, $args)
     {
-        $this->_join .= " $mode $args[0] ON $args[1] $args[2] $args[3] ";
+        // Check for comparison type
+        if(in_array($args[2], $this->_comparisonOperators, true)){
+            $this->_join .= " $mode $args[0] ON $args[1] $args[2] $args[3] ";
+        }else {
+            throw new \Exception("Argument for comparison type not valid.");
+        }
+    }
+
+    public function include(Model $modelClass, ?string $localCol = null, ?string $foreignCol = null){
+        // The first arg is a valid instance of Model
+        if($modelClass instanceof Model){
+            // Defaults to primaryKey field if not defined
+            if($localCol == null){
+                $localCol = $this->_primaryKeyColumn;
+            }
+
+            // Defaults to primaryKey field if not defined
+            if($foreignCol == null){
+                $foreignCol = $this->_primaryKeyColumn;
+            }
+
+            $this->_include[] = new IncludeHelper($modelClass, $localCol, $foreignCol);
+            return $this;
+        }else{
+            throw new \Exception("The include argument must consist an instance of Model");
+        }
     }
 
     /**
@@ -456,12 +519,7 @@ class Model
             }
 
            // Populate parameters
-            if(!property_exists($this, $property->Field)){
-                // If property is not declared in model, throws the error
-                throw new \Exception("Property $property->Field found but is not declared in model.");
-            }else{
-                $params[$property->Field] = $this->{$property->Field};
-            }
+            $params[$property->Field] = $this->{$property->Field} ?? null;
         }
 
         if($this->{$primaryKey->Field} == null){
