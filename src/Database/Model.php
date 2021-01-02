@@ -478,6 +478,15 @@ class Model
         }
     }
 
+    /**
+     * Include a table result based on its foreign and primary key relationship.
+     * 
+     * @param object $modelClass The model that is to be included.
+     * @param string $localCol The local column of the host model. Generally the primary key.
+     * @param string $foreignCol The foreign column of the included model. Generally the foreign key.
+     * 
+     * @return object The model object.
+     */
     public function include(Model $modelClass, ?string $localCol = null, ?string $foreignCol = null){
         // The first arg is a valid instance of Model
         if($modelClass instanceof Model){
