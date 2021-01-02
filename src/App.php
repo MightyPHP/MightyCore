@@ -2,6 +2,7 @@
 
 namespace MightyCore;
 
+use MightyCore\Http\Request;
 use MightyCore\Http\Response;
 use MightyCore\Routing\RouteProcessor;
 use MightyCore\Utilities\Logger;
@@ -15,6 +16,8 @@ class App
      */
     protected $class = Null;
 
+    protected $response;
+
     protected $request;
 
     public function __construct($request, $origin)
@@ -24,7 +27,9 @@ class App
          */
         Security::init();
 
-        $this->request = new Response();
+        $this->response = new Response();
+
+        $this->request = new Request();
 
         /**
          * Secure the request,
@@ -41,8 +46,8 @@ class App
     public function errorHandler($e)
     {
         Logger::error($e);
-        $this->request->setStatusCode(500);
-        $this->request->send('Oops, something is broken.');
+        $this->response->setStatusCode(500);
+        $this->response->send('Oops, something is broken.');
     }
 
     public function callAPP()
@@ -54,17 +59,14 @@ class App
             $route = $routeProcessor->process();
 
             if ($route === false || empty($route)) {
-                $this->request->setStatusCode(404);
-                $this->request->send('Not found.');
+                $this->response->setStatusCode(404);
+                $this->response->send('Not found.');
             } else {
-                /**Checks for CSRF */
-                // Security::csrfCheck($route);
-
                 /**Start to administer middleware */
                 if (!empty($route['middlewares'])) {
                     foreach ($route['middlewares'] as $k => $v) {
                         $v = "Application\\Middlewares\\" . str_replace('/', '\\', $v);
-                        $this_middleware = new $v();
+                        $this_middleware = new $v($this->request);
                         $this_middleware->administer();
                         //TODO: if middleware not found?
                     }
@@ -80,8 +82,8 @@ class App
             } else {
                 $message = "Class not found: $controller_class";
                 if (env('APP_ENV') == "production") { $message = "Not Found"; }
-                $this->request->setStatusCode(404);
-                $this->request->send($message);
+                $this->response->setStatusCode(404);
+                $this->response->send($message);
                 exit;
             }
 
@@ -95,7 +97,11 @@ class App
                     $class = $param->getType() ? $param->getType()->getName() : null;
 
                     if($class != null && class_exists($class)){
-                        $methodParams[] = new $class();
+                        if($class == 'MightyCore\Http\Request'){
+                            $methodParams[] = $this->request;
+                        }else{
+                            $methodParams[] = new $class();
+                        }
                     }else{
                         if(!empty($routeProcessor->params[$name])){
                             $methodParams[] = $routeProcessor->params[$name];
@@ -107,21 +113,21 @@ class App
                 $return = call_user_func_array(array($this->class, $func), $methodParams);
 
                 if (!empty($return)) {
-                    $this->request->setStatusCode(200);
-                    $this->request->send($return);
+                    $this->response->setStatusCode(200);
+                    $this->response->send($return);
                 }
             } else {
                 $message = "Method not found: ".$route['method'];
                 if (env('APP_ENV') == "production") { $message = "Not Found"; }
-                $this->request->setStatusCode(404);
-                $this->request->send($message);
+                $this->response->setStatusCode(404);
+                $this->response->send($message);
                 exit;
             }
         } catch (\Error $err) {
             if(env("APP_ENV") != null && env("APP_ENV") == "production"){
                 // Production environment, show generic error page
-                $this->request->setStatusCode(500);
-                $this->request->send("Oops. Something went wrong.");
+                $this->response->setStatusCode(500);
+                $this->response->send("Oops. Something went wrong.");
                 exit;
             }
         } catch (\Exception $ex){
@@ -132,15 +138,15 @@ class App
 
             if(env("APP_ENV") != null && env("APP_ENV") == "production"){
                 // Production environment, show generic error page
-                $this->request->setStatusCode(500);
-                $this->request->send("Oops. Something went wrong.");
+                $this->response->setStatusCode(500);
+                $this->response->send("Oops. Something went wrong.");
                 exit;
             }
         } catch (\Throwable $th){
             if(env("APP_ENV") != null && env("APP_ENV") == "production"){
                 // Production environment, show generic error page
-                $this->request->setStatusCode(500);
-                $this->request->send("Oops. Something went wrong.");
+                $this->response->setStatusCode(500);
+                $this->response->send("Oops. Something went wrong.");
                 exit;
             }
         }

@@ -7,7 +7,7 @@ class Request
   public $method;
   public $uri;
   public $isXhr = false;
-  private $params = [];
+  private $locals = [];
 
   public function __construct()
   {
@@ -80,5 +80,19 @@ class Request
     }
 
     return $this->query[$key] ?? null;
+  }
+
+  /**
+   * Set the local value by key of the request.
+   */
+  public function setLocal($key, $value){
+    $this->locals[$key] = $value;
+  }
+
+  /**
+   * Get the local value by key of the request.
+   */
+  public function getLocal($key){
+    return $this->locals[$key];
   }
 }

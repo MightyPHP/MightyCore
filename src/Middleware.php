@@ -1,11 +1,12 @@
 <?php
 namespace MightyCore;
+
+use MightyCore\Http\Request;
+
 class MIDDLEWARE {
-    //TO DO: come out with Middleware Utils
-    public $_security;
+    public $request;
     
-    public function __construct() {
-        $this->_security = new SECURITY();
+    public function __construct(Request $request) {
+        $this->request = $request;
     }
 }
-?>
