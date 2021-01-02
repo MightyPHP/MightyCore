@@ -45,12 +45,35 @@ class Request
   }
 
   /**
+   * Get headers of the request
+   * 
+   * @param string $headerKey The header key.
+   * @return string|array The header value or an array of all headers.
+   */
+  public function header(?string $headerKey = null) {
+      $headers = array();
+      foreach($_SERVER as $key => $value) {
+          if (substr($key, 0, 5) <> 'HTTP_') {
+              continue;
+          }
+          $header = str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower(substr($key, 5)))));
+          $headers[$header] = $value;
+      }
+
+      if($headerKey != null){
+        return $headers[$headerKey] ?? null;
+      }else{
+        return $headers;
+      }
+  }
+
+  /**
    * Returns the request URL querries.
    *
    * @param string $key The query name.
    * @return string|array The query value or array of all queries.
    */
-  public function query(?string $key = "") : array
+  public function query(?string $key = null) : array
   {
     if(empty($key)){
       return $this->query;
