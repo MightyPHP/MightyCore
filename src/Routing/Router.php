@@ -84,9 +84,9 @@ class Router
     if($path == '/' && substr($path, -1) == '/'){
       $path = substr($path, 0, -1);
     }
-
-    // $path = $this->scope . $path;
+    
     $this->setPath('GET', $path, $destination);
+    $path = $this->scope . $path;
     return new MicroRouter($path, 'GET');
   }
 
@@ -103,8 +103,8 @@ class Router
       $path = substr($path, 0, -1);
     }
 
-    // $path = $this->scope . $path;
     $this->setPath('POST', $path, $destination);
+    $path = $this->scope . $path;
     return new MicroRouter($path, 'POST');
   }
 
@@ -121,8 +121,8 @@ class Router
       $path = substr($path, 0, -1);
     }
 
-    // $path = $this->scope . $path;
     $this->setPath('DELETE', $path, $destination);
+    $path = $this->scope . $path;
     return new MicroRouter($path, 'DELETE');
   }
 
@@ -139,8 +139,8 @@ class Router
       $path = substr($path, 0, -1);
     }
 
-    // $path = $this->scope . $path;
     $this->setPath('PUT', $path, $destination);
+    $path = $this->scope . $path;
     return new MicroRouter($path, 'PUT');
   }
 }

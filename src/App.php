@@ -57,7 +57,7 @@ class App
             /**Get routing afer processing */
             $routeProcessor = new RouteProcessor();
             $route = $routeProcessor->process();
-
+            
             if ($route === false || empty($route)) {
                 $this->response->setStatusCode(404);
                 $this->response->send('Not found.');
