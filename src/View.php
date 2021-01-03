@@ -6,24 +6,14 @@ use MightyCore\Http\Request;
 class VIEW {
 
     protected $_view;
-    protected $_template;
     protected $_controller;
-    protected $_legacy=false;
 
-    public function __construct($view, $template = NULL, $templateData = NULL) {
+    public function __construct($view) {
         $this->_view = $view;
-        $this->_template = $template;
-        $this->_templateData = $templateData;
     }
 
-    public function render($data = null, $legacy = false) {
-        $this->legacy = $legacy;
+    public function render($data = null) {
         $view_file = file_get_contents(DOC_ROOT . '/Application/Views/' . $this->_view . ".html");
-        
-        if (!empty($this->_template)) {
-            $template_file = file_get_contents(TEMPLATE_PATH . '/' . $this->_template . ".html");
-            $view_file = preg_replace('/{{\s*(@contents)\s*}}/', $view_file, $template_file);
-        }
 
         /**
          * Injects CSRF
@@ -41,189 +31,65 @@ class VIEW {
             }   
         }
         
-        if($legacy == true){
-            $view_file = $this->bindRender($view_file, $data);
-        }
-        
-        if (isset($data) && $legacy == true) {
-            foreach ($data as $key => $value) {
-                if (is_array($value)) {
-                    $value = json_encode($value);
-                }
-                $view_file = str_replace('{%' . $key . '%}', $value, $view_file);
-            }
-        }
-        
-        if($legacy == true){
-            $view_file = $this->mapRedirects($view_file);
-            $view_file = $this->cleanUpTags($view_file);
-        }
-
-        if($legacy == true){
-            return $view_file;
-        }else{
-            $loader1 = new \Twig\Loader\ArrayLoader([
-                'twig' => $view_file,
-            ]);
-
-            $loader2 = new \Twig\Loader\FilesystemLoader(DOC_ROOT."/Application/Views");
-
-            $loader = new \Twig\Loader\ChainLoader([$loader1, $loader2]);
-            $twig = new \Twig\Environment($loader);
-
-            /**
-             * route() function
-             */
-            $routeFunction = new \Twig\TwigFunction('route', function ($value) {
-                return route($value);
-            });
-            $twig->addFunction($routeFunction);
-
-            /**
-             * csrf_token() function
-             */
-            $csrfFunction = new \Twig\TwigFunction('csrf_token', function () {
-                return $_SESSION['csrf_token'];
-            });
-            $twig->addFunction($csrfFunction);
-
-            /**
-             * trans() function
-             */
-            $transFunction = new \Twig\TwigFunction('trans', function ($value) {
-                return $this->mapTrans($value);
-            });
-            $twig->addFunction($transFunction);
-
-            /**
-             * return() function
-             */
-            $returnFunction = new \Twig\TwigFunction('return', function ($value, $args=[]) {
-                return new \Twig\Markup($this->mapControllers($value, $args), "utf-8");
-            });
-            $twig->addFunction($returnFunction);
-
-            /**
-             * asset() function
-             */
-            $returnFunction = new \Twig\TwigFunction('asset', function ($value) {
-                include_once(UTILITY_PATH."/Helpers/asset.php");
-                return \asset($value);
-            });
-            $twig->addFunction($returnFunction);
-
-            if(empty($data)){
-                $data = array();
-            }
-            
-            $twig->addGlobal('app', [
-                'session' => $_SESSION,
-                'request' => new Request()
-            ]);
-            return $twig->render('twig', $data);
-        }
-    }
-
-    public function twig($data = array()){
-        $this->_legacy = true;
-        $view_file = $this->render(null, true);
-        $loader = new \Twig\Loader\ArrayLoader([
+        $loader1 = new \Twig\Loader\ArrayLoader([
             'twig' => $view_file,
         ]);
+
+        $loader2 = new \Twig\Loader\FilesystemLoader(DOC_ROOT."/Application/Views");
+
+        $loader = new \Twig\Loader\ChainLoader([$loader1, $loader2]);
         $twig = new \Twig\Environment($loader);
-        
-        return $twig->render('twig', $data);
-    }
 
-    private function bindRender($view_file, $data){
         /**
-         * Include method must come first to include all html before binding
+         * route() function
          */
-        $helper_functions = ['include','asset', 'return', 'trans', 'route', 'csrf_token'];
-        foreach($helper_functions as $k=>$v){
-            $pattern = "~\{\{\s*".$v."\((.*?)\)\s*\}\}~";
-            if(preg_match_all($pattern, $view_file, $scope)){
-                $param = $scope[1];
+        $routeFunction = new \Twig\TwigFunction('route', function ($value) {
+            return route($value);
+        });
+        $twig->addFunction($routeFunction);
 
-                if($v == 'include'){
-                    foreach($param as $kp=>$kv){
-                        $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
-                        $view_file = preg_replace($pattern, file_get_contents(DOC_ROOT . '/Application/Views/' . $kv . ".html"), $view_file);
-                    } 
-                }
+        /**
+         * csrf_token() function
+         */
+        $csrfFunction = new \Twig\TwigFunction('csrf_token', function () {
+            return $_SESSION['csrf_token'];
+        });
+        $twig->addFunction($csrfFunction);
 
-                if($v == 'return'){
-                    foreach($param as $kp=>$kv){
-                        $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
-                        $view_file = preg_replace($pattern, $this->mapControllers($kv), $view_file);
-                    } 
-                }
+        /**
+         * trans() function
+         */
+        $transFunction = new \Twig\TwigFunction('trans', function ($value) {
+            return trans($value);
+        });
+        $twig->addFunction($transFunction);
 
-                if($v == 'asset'){
-                    include_once(UTILITY_PATH."/Helpers/asset.php");
-                    foreach($param as $kp=>$kv){
-                        $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
-                        $view_file = preg_replace($pattern, \asset($kv), $view_file);
-                    }    
-                }
+        /**
+         * return() function
+         */
+        $returnFunction = new \Twig\TwigFunction('return', function ($value, $args=[]) {
+            return new \Twig\Markup($this->mapControllers($value, $args), "utf-8");
+        });
+        $twig->addFunction($returnFunction);
 
-                if($v == 'trans'){
-                    foreach($param as $kp=>$kv){
-                        $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
-                        $view_file = preg_replace($pattern, $this->mapTrans($kv), $view_file);
-                    }  
-                }
+        /**
+         * asset() function
+         */
+        $returnFunction = new \Twig\TwigFunction('asset', function ($value) {
+            include_once(UTILITY_PATH."/Helpers/asset.php");
+            return \asset($value);
+        });
+        $twig->addFunction($returnFunction);
 
-                if($v == 'route'){
-                    foreach($param as $kp=>$kv){
-                        $pattern = "~\{\{\s*".$v."\((".$kv.")\)\s*\}\}~";
-                        $route = '';
-                        if(!empty(ROUTE::getNamedRoutes()[$kv])){
-                            $route = ROUTE::getNamedRoutes()[$kv];
-                        }
-                        $view_file = preg_replace($pattern, $route, $view_file);
-                    }
-                }
-
-                if($v == 'csrf_token'){
-                    foreach($param as $kp=>$kv){
-                        $pattern = "~\{\{\s*".$v."\(()\)\s*\}\}~";
-                        $view_file = preg_replace($pattern, $_SESSION['csrf_token'], $view_file);
-                    }
-                }
-            }
+        if(empty($data)){
+            $data = array();
         }
-
-        if (isset($data) && $this->_legacy == true) {
-            foreach ($data as $k => $v) {
-                $pattern = "~\{\{\s*(".$k.")\s*\}\}~";
-                if (is_array($v)) {
-                    $v = json_encode($v);
-                }
-                $view_file = preg_replace($pattern, $v, $view_file);
-            }
-        }
-
-        return $view_file;
-    }
-
-    private function mapTrans($data){
-        $data = explode(".", $data);
-        $file = $data[0];
-        $var = $data[1];
-
-        if(!empty($_SESSION['lang'])){
-            $mode = $_SESSION['lang'];
-        }else{
-            $mode = DEFAULT_LANG;
-        }
-
-        $lang = include(UTILITY_PATH."/Lang/$mode/$file.php");
-        if(!empty($lang[$var])){
-            return $lang[$var];
-        }else{
-            return false;
-        }
+        
+        $twig->addGlobal('app', [
+            'session' => $_SESSION,
+            'request' => new Request()
+        ]);
+        return $twig->render('twig', $data); 
     }
 
     private function mapControllers($scope, $args) {
@@ -245,24 +111,4 @@ class VIEW {
             return false;
         }
     }
-    
-    private function cleanUpTags($template){
-        if (preg_match_all("~\{\%\s*(.*?)\s*\%\}~", $template, $arr)) {
-            foreach ($arr[0] as $k => $v) {
-                $template = str_replace($v, '', $template);
-            }
-        }
-        return $template;
-    }
-
-    private function mapRedirects($template) {
-        if (preg_match_all("~\{\_\s*(.*?)\s*\_\}~", $template, $arr)) {
-            foreach ($arr[1] as $k => $v) {
-                $completeLink = ROOT_PATH . $v;
-                $template = str_replace('{_' . $v . '_}', $completeLink, $template);
-            }
-        }
-        return $template;
-    }
-
 }
