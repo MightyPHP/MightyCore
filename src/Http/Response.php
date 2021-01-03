@@ -25,9 +25,14 @@ class Response
    * @param string $content The content to send over as response.
    * @return void
    */
-  public function send($content)
+  public function send(?string $content = '')
   {
-    header("HTTP/1.1 " . $this->statusCode . " " . $this->statusText[$this->statusCode], true);
+    $responseString = '';
+    if(isset($this->statusText[$this->statusCode])){
+      $responseString = $this->statusText[$this->statusCode];
+    }
+
+    header("HTTP/1.1 " . $this->statusCode . " " .  $responseString, true);
     if ($this->statusCode !== 200) {
       echo "
           <div style='position: relative; width: 100%; min-height: 100%;'>

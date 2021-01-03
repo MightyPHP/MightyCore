@@ -99,6 +99,8 @@ class App
                     if($class != null && class_exists($class)){
                         if($class == 'MightyCore\Http\Request'){
                             $methodParams[] = $this->request;
+                        }else if($class == 'MightyCore\Http\Response'){
+                            $methodParams[] = $this->response;
                         }else{
                             $methodParams[] = new $class();
                         }
@@ -112,10 +114,7 @@ class App
                 $func = $route['method'];
                 $return = call_user_func_array(array($this->class, $func), $methodParams);
 
-                if (!empty($return)) {
-                    $this->response->setStatusCode(200);
-                    $this->response->send($return);
-                }
+                $this->response->send($return);
             } else {
                 $message = "Method not found: ".$route['method'];
                 if (env('APP_ENV') == "production") { $message = "Not Found"; }
