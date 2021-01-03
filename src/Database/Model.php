@@ -93,7 +93,7 @@ class Model
                 $tableClassPath = get_called_class();
                 $tableClassPathExplode = explode("\\", $tableClassPath);
                 $tableClass = end($tableClassPathExplode);
-                $this->table = strtolower(str_replace('Model', '', $tableClass));
+                $this->table = $this->camelToUnderscore(str_replace('Model', '', $tableClass));
             }
 
             $this->getProperties($this->table);
@@ -107,6 +107,11 @@ class Model
         } catch (\PDOException $e) {
             throw $e;
         }
+    }
+
+    private function camelToUnderscore($string, $us = "_") {
+        return strtolower(preg_replace(
+            '/(?<=\d)(?=[A-Za-z])|(?<=[A-Za-z])(?=\d)|(?<=[a-z])(?=[A-Z])/', $us, $string));
     }
 
     /**
