@@ -9,6 +9,11 @@ class Request
   private array $query = [];
 
   /**
+   * Holds the files of the request
+   */
+  private array $files = [];
+
+  /**
    * The method of the request.
    */
   public string $method;
@@ -46,6 +51,10 @@ class Request
      * Sets the query from request
      */
     $this->query = $query;
+
+    foreach ((array) $_FILES as $k => $v) {
+      $this->files[$k] = $v;
+    }
 
     /**
      * Sets the request URI
@@ -105,13 +114,28 @@ class Request
    * @param string $key The query name.
    * @return string|array The query value or array of all queries.
    */
-  public function query(?string $key = null) : array
+  public function query(?string $key = null)
   {
     if(empty($key)){
       return $this->query;
     }
 
     return $this->query[$key] ?? null;
+  }
+
+  /**
+   * Returns the request files.
+   *
+   * @param string $key The file name.
+   * @return string|array The file or array of all files.
+   */
+  public function file(?string $key = null)
+  {
+    if(empty($key)){
+      return $this->files;
+    }
+
+    return $this->files[$key] ?? null;
   }
 
   /**
