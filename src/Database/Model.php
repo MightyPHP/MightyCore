@@ -141,6 +141,9 @@ class Model
         $this->log = true;
     }
 
+    /**
+     * Executes the prepared query.
+     */
     public function execute()
     {
         $query = $this->queryBuilder();
@@ -337,7 +340,7 @@ class Model
      * @param $type This is either OR or AND
      * @return $this
      */
-    private function whereProcessor($args, $type)
+    private function whereProcessor($args, $type, ?bool $null = false)
     {
         // Check if this where clause is the first
         $first = false;
@@ -370,20 +373,89 @@ class Model
             }
             $index++;
         }
+        
+        return $this;
+    }
+
+    private function nullWhereProcessor(string $column, string $type, bool $null){
+        // Check if this where clause is the first
+        $first = false;
+        if ($this->_where == "") {
+            $first = true;
+            // If it is, append WHERE in the query
+            $this->_where = " WHERE ";
+        }
+
+        if ($first === false) {
+            $this->_where .= " $type ";
+        }
+        
+        if($null == false){
+            $nullString = "IS NOT NULL";
+        }else{
+            $nullString = "IS NULL";
+        }
+
+        $this->_where .= " $column $nullString ";
+
         return $this;
     }
 
     /**
      * Generates the where query
+     * 
      */
     public function where()
     {
         return $this->whereProcessor(func_get_args(), 'AND');
     }
 
+    /**
+     * Generates a where with the OR Operator
+     */
     public function orWhere()
     {
         return $this->whereProcessor(func_get_args(), 'OR');
+    }
+
+    /**
+     * Generates a where for a null column
+     * 
+     * @param string $column The column where the value should be null.
+     */
+    public function whereNull(string $column)
+    {
+        return $this->nullWhereProcessor($column, 'AND', true);
+    }
+
+    /**
+     * Generates a where for a null column with the OR operator
+     * 
+     * @param string $column The column where the value should be null.
+     */
+    public function orWhereNull(string $column)
+    {
+        return $this->nullWhereProcessor($column, 'AND', true);
+    }
+
+    /**
+     * Generates a where for not null column with the OR operator
+     * 
+     * @param string $column The column where the value should not be null.
+     */
+    public function whereNotNull(string $column)
+    {
+        return $this->nullWhereProcessor($column, 'AND', false);
+    }
+
+    /**
+     * Generates a where for not null column with the OR operator
+     * 
+     * @param string $column The column where the value should not be null.
+     */
+    public function orWhereNotNull(string $column)
+    {
+        return $this->nullWhereProcessor($column, 'AND', false);
     }
 
     /**
