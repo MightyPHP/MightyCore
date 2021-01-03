@@ -3,11 +3,35 @@ namespace MightyCore\Http;
 
 class Request
 {
-  private $query;
-  public $method;
-  public $uri;
-  public $isXhr = false;
-  private $locals = [];
+  /**
+   * Holds the querries of the request
+   */
+  private array $query = [];
+
+  /**
+   * The method of the request.
+   */
+  public string $method;
+
+  /**
+   * The request URI
+   */
+  public string $uri;
+
+  /**
+   * Determine if request is an XHR request.
+   */
+  public bool $isXhr = false;
+  
+  /**
+   * Holds the locals array.
+   */
+  private array $locals = [];
+
+  /**
+   * Holds all the headers of the requests.
+   */
+  private array $headers = [];
 
   public function __construct()
   {
@@ -23,6 +47,9 @@ class Request
      */
     $this->query = $query;
 
+    /**
+     * Sets the request URI
+     */
     $this->uri = "{$_SERVER['REQUEST_URI']}";
 
     /**
@@ -39,8 +66,22 @@ class Request
       }
     }
 
+    /**
+     * Determine if request is XHR
+     */
     if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
       $this->isXhr = true;
+    }
+
+    /**
+     * Get all the headers of the request
+     */
+    foreach($_SERVER as $key => $value) {
+        if (substr($key, 0, 5) <> 'HTTP_') {
+            continue;
+        }
+        $header = str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower(substr($key, 5)))));
+        $this->headers[$header] = $value;
     }
   }
 
@@ -51,19 +92,10 @@ class Request
    * @return string|array The header value or an array of all headers.
    */
   public function header(?string $headerKey = null) {
-      $headers = array();
-      foreach($_SERVER as $key => $value) {
-          if (substr($key, 0, 5) <> 'HTTP_') {
-              continue;
-          }
-          $header = str_replace(' ', '-', ucwords(str_replace('_', ' ', strtolower(substr($key, 5)))));
-          $headers[$header] = $value;
-      }
-
       if($headerKey != null){
-        return $headers[$headerKey] ?? null;
+        return $this->headers[$headerKey] ?? null;
       }else{
-        return $headers;
+        return $this->headers;
       }
   }
 
@@ -84,6 +116,8 @@ class Request
 
   /**
    * Set the local value by key of the request.
+   * 
+   * @return void
    */
   public function setLocal($key, $value){
     $this->locals[$key] = $value;
@@ -91,6 +125,8 @@ class Request
 
   /**
    * Get the local value by key of the request.
+   * 
+   * @return void
    */
   public function getLocal($key){
     return $this->locals[$key];
