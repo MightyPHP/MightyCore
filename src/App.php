@@ -16,8 +16,14 @@ class App
      */
     protected $class = Null;
 
+    /**
+     * Holds the response object
+     */
     protected $response;
 
+    /**
+     * Holds the request object
+     */
     protected $request;
 
     public function __construct($request, $origin)
@@ -30,12 +36,6 @@ class App
         $this->response = new Response();
 
         $this->request = new Request();
-
-        /**
-         * Secure the request,
-         * then start
-         */
-        // Request::init(Request::secure($request));
 
         if (env('APP_ENV') == "production") {
             set_error_handler(array($this, "errorHandler"), E_ALL);
