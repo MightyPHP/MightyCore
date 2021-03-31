@@ -123,6 +123,11 @@ class App
                 exit;
             }
         } catch (\Error $err) {
+            if(env("APP_ENV") != null && env("APP_ENV") == "development"){
+                // Development environment, throw full stack trace
+                \MightyCore\Exception\Template::generateStack($err->getMessage(), $err->getTrace());
+            }
+
             if(env("APP_ENV") != null && env("APP_ENV") == "production"){
                 // Production environment, show generic error page
                 $this->response->setStatusCode(500);
@@ -142,6 +147,11 @@ class App
                 exit;
             }
         } catch (\Throwable $th){
+            if(env("APP_ENV") != null && env("APP_ENV") == "development"){
+                // Development environment, throw full stack trace
+                \MightyCore\Exception\Template::generateStack($th->getMessage(), $th->getTrace());
+            }
+
             if(env("APP_ENV") != null && env("APP_ENV") == "production"){
                 // Production environment, show generic error page
                 $this->response->setStatusCode(500);
