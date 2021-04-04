@@ -248,7 +248,7 @@ class Model
      * 
      * @param array Associative array with column to value set for update query
      */
-    public function update($update)
+    public function update(array $update)
     {
         $this->mode = 'update';
         $updateQuery = '';
@@ -289,7 +289,7 @@ class Model
      * 
      * @return integer The last insert ID
      */
-    public function insert($args)
+    public function insert(array $args)
     {
         $insertQuery = '';
         $inserQueryValue = '';
