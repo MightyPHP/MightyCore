@@ -3,9 +3,9 @@ define("DOC_ROOT", __DIR__."/../../../../../");
 require __DIR__ . '/../../../../autoload.php';
 
 // Utilities Path
-define("UTILITY_PATH", DOC_ROOT . '/Utilities');
+define("UTILITY_PATH", DOC_ROOT . 'Utilities');
 // Database Path
-define("DATABASE_PATH", DOC_ROOT . '/Database');
+define("DATABASE_PATH", DOC_ROOT . 'Database');
 
 define('SECURITY_SESSION_TIMEOUT', env('SECURITY_SESSION_TIMEOUT', 3600));
 
@@ -26,13 +26,34 @@ if(file_exists ( DOC_ROOT . ".env" )){
 }
 
 /**
+ * Grab config value
+ * 
+ * @param string $config The config key
+ * @return string|array The config value
+ */
+function config(string $config){
+  $configExplode = explode('.', $config);
+
+  $configFile = $configExplode[0];
+  array_shift($configExplode);
+
+  $configValue = include DOC_ROOT . 'Config/' . $configFile . '.php';
+  
+  foreach ($configExplode as $value) {
+    $configValue = $configValue[$value];
+  }
+
+  return $configValue;
+}
+
+/**
  * Grab ENV value
  * 
  * @param string  $env   The env key to obtain
  * @param bool $default  The default value to return if env not found
  * @return string|bool
  */
-function env(string $env, bool $default=false){
+function env(string $env, $default=null){
   if(getenv($env)){
     $env = getenv($env);
     if(preg_match('/^(["\']).*\1$/m', $env)){
@@ -63,13 +84,13 @@ function trans($data){
   $file = $data[0];
   $var = $data[1];
 
-  if(!empty($_SESSION['lang'])){
-      $mode = $_SESSION['lang'];
+  if(!empty($_COOKIE['_LANG'])){
+      $mode = $_COOKIE['_LANG'];
   }else{
-      $mode = env('DEFAULT_LANGUAGE', 'en');
+      $mode = config('app.default_language');
   }
 
-  $lang = include(DOC_ROOT."/Utilities/Lang/$mode/$file.php");
+  $lang = include(DOC_ROOT."Utilities/Lang/$mode/$file.php");
   if(!empty($lang[$var])){
       return $lang[$var];
   }else{
