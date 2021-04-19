@@ -59,8 +59,14 @@ class Response
       $content = json_encode($content);
     }
 
+    $responseString = '';
+    if(isset($this->statusText[$this->statusCode])){
+      $responseString = $this->statusText[$this->statusCode];
+    }
+
+    header("HTTP/1.1 " . $this->statusCode . " " .  $responseString, true);
     header('Content-Type: application/json');
-    $this->send($content);
+    echo $content;
   }
 
   /**
