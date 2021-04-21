@@ -38,20 +38,42 @@ class Request
    */
   private array $headers = [];
 
+  /**
+   * Holds all the body of the request
+   */
+  private array|null $body = [];
+
+  /**
+   * Holds all the form data of the request
+   */
+  private array $form = [];
+
   public function __construct()
   {
-    $query = array();
-    foreach ((array) $_REQUEST as $k => $v) {
+    $form = array();
+    foreach ((array) $_POST as $k => $v) {
       if ($k !== '_request_') {
-        $query[$k] = $v;
+        $form[$k] = $v;
       }
     }
+
+    $this->form = $form;
+
+    /**
+     * Get all body data
+     */
+    $this->body = json_decode(file_get_contents('php://input'), true);
 
     /**
      * Sets the query from request
      */
-    $this->query = $query;
+    $queries = array();
+    parse_str($_SERVER['QUERY_STRING'], $queries);
+    $this->query = $queries;
 
+    /**
+     * Loads all files from request
+     */
     foreach ((array) $_FILES as $k => $v) {
       $this->files[$k] = $v;
     }
@@ -136,6 +158,40 @@ class Request
     }
 
     return $this->files[$key] ?? null;
+  }
+
+  /**
+   * Returns the body content.
+   *
+   * @param string $key The file name.
+   * @return string|array The file or array of all files.
+   */
+  public function body(?string $key = null)
+  {
+    if($this->body == null){
+      return null;
+    }
+
+    if(empty($key)){
+      return $this->body;
+    }
+
+    return $this->body[$key] ?? null;
+  }
+
+  /**
+   * Returns the form content.
+   *
+   * @param string $key The file name.
+   * @return string|array The file or array of all files.
+   */
+  public function form(?string $key = null)
+  {
+    if(empty($key)){
+      return $this->form;
+    }
+
+    return $this->form[$key] ?? null;
   }
 
   /**
