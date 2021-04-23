@@ -7,10 +7,16 @@ use MightyCore\Http\Response;
 
 class VerifyCsrf
 {
+  protected $csrf = null;
+
   public function __construct()
   {
     $request = new Request();
-    $this->csrf = $request->query('csrf_token');
+    if($request->query('csrf_token') != null){
+      $this->csrf = $request->query('csrf_token');
+    }else if($request->body('csrf_token') != null){
+      $this->csrf = $request->body('csrf_token');
+    }
   }
 
   public function verify()
