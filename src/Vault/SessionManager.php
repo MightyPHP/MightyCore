@@ -6,29 +6,120 @@ class SessionManager
 {
   public static function sessionStart($limit = 0, $path = '/', $domain = null, $secure = null)
   {
-    session_save_path(DOC_ROOT."/Storage/Sessions");
-    // Set SSL level
-    $https = isset($secure) ? $secure : isset($_SERVER['HTTPS']);
-    
-    // Set session cookie options
-    session_set_cookie_params($limit, $path, $domain, $https, true);
-    session_start();
+    $sessionDriver = config('session.driver');
 
-    // Generate CSRF Token
-    self::generateCSRF();
-
-    // Make sure the session hasn't expired, and destroy it if it has
-    if (!self::validateSession()) {
-      $_SESSION = array();
-      session_destroy();
+    if($sessionDriver == "file"){
+      session_save_path(DOC_ROOT."/Storage/Sessions");
+      // Set SSL level
+      $https = isset($secure) ? $secure : isset($_SERVER['HTTPS']);
+      
+      // Set session cookie options
+      session_set_cookie_params($limit, $path, $domain, $https, true);
       session_start();
+
+      // Generate CSRF Token
+      self::generateCSRF();
+
+      // Make sure the session hasn't expired, and destroy it if it has
+      if (!self::validateSession()) {
+        $_SESSION = array();
+        session_destroy();
+        session_start();
+      }
+    }else if($sessionDriver == "database"){
+      $session = self::getDatabaseSession();
+
+      if(empty($session)){
+        $db = self::getDefaultDB();
+
+        $bytes = random_bytes(20);
+        $seshCookie = bin2hex($bytes);
+
+        $stmt = $db->prepare("INSERT INTO ".config('session.database.table')." (`id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$seshCookie, $_SERVER['REMOTE_ADDR'], $_SERVER['HTTP_USER_AGENT'], json_encode(array()), gmdate('Y-m-d H:i:s')]);
+      }
+    }
+  }
+
+  private static function getDatabaseSession(){
+    $db = self::getDefaultDB();
+    $seshCookie = $_COOKIE[config('session.cookie')];
+
+    $stmt = $db->prepare("SELECT * FROM ".config('session.database.table')." WHERE id == ?");
+    $stmt->execute([$seshCookie]);
+    $data = $stmt->fetch(\PDO::FETCH_OBJ);
+
+    return json_decode($data->payload, true);
+  }
+
+  private static function getDefaultDB()
+  {
+    $servername = config('session.database.host');
+    $port = config('session.database.port');
+    $username = config('session.database.user');
+    $password = config('session.database.password');
+    $database = config('session.database.schema');
+    try {
+      $db = new \PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
+      $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+      $stmt = $db->prepare("SHOW TABLES LIKE '".config('session.database.table')."'");
+      $stmt->execute();
+      $data = $stmt->fetch(\PDO::FETCH_OBJ);
+
+      /**
+       * Check if Migrations table exist
+       * if not, create
+       */
+      if ($data === false) {
+        $stmt = $db->prepare("CREATE TABLE ".config('session.database.table')." (
+                    `id` VARCHAR(45) NOT NULL,
+                    `ip_address` VARCHAR(45) NULL,
+                    `user_agent` TEXT NULL,
+                    `payload` TEXT NULL,
+                    `last_activity` DATETIME NOT NULL,
+                    PRIMARY KEY (`id`))");
+        $stmt->execute();
+      }
+      return $db;
+    } catch (\PDOException $e) {
+      throw $e;
+    }
+  }
+
+  public static function sessionSetterGetter(string $key, string $value = null){
+    $sessionDriver = config('session.driver');
+
+    if($sessionDriver == "file"){
+      if($value != null){
+        $_SESSION[$key] = $value;
+      }
+      return $_SESSION[$key];
+    }else{
+      $db = self::getDefaultDB();
+      $seshCookie = $_COOKIE[config('session.cookie')];
+
+      $stmt = $db->prepare("SELECT * FROM ".config('session.database.table')." WHERE id == ?");
+      $stmt->execute([$seshCookie]);
+      $data = $stmt->fetch(\PDO::FETCH_OBJ);
+
+      if($data == null){
+        return $data;
+      }
+
+      if($value != null){
+        $stmt = $db->prepare("SELECT * FROM ".config('session.database.table')." WHERE id == ?");
+        $stmt->execute([$seshCookie, $value]);
+      }else{
+        $session = json_decode($data->payload, true);
+        return $session[$key];
+      }
     }
   }
 
   static protected function generateCSRF()
   {
-      if (!isset($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+      if (self::sessionSetterGetter('csrf_token') === null) {
+        self::sessionSetterGetter('csrf_token', bin2hex(random_bytes(32)));
       }
   }
 
