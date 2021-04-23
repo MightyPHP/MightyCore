@@ -84,10 +84,10 @@ function trans($data){
   $file = $data[0];
   $var = $data[1];
 
-  if(!empty($_COOKIE['_LANG'])){
-      $mode = $_COOKIE['_LANG'];
+  if(!empty($_COOKIE[config('app.localization.language_cookie')])){
+      $mode = $_COOKIE[config('app.localization.language_cookie')];
   }else{
-      $mode = config('app.default_language');
+      $mode = config('app.localization.default_language');
   }
 
   $lang = include(DOC_ROOT."Utilities/Lang/$mode/$file.php");

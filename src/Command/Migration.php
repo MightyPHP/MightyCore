@@ -97,12 +97,11 @@ class Migration
 
   private function getDefaultDB()
   {
-    $db = 'default';
-    $servername = env('DB_' . strtoupper($db) . '_HOST');
-    $port = env('DB_' . strtoupper($db) . '_PORT');
-    $username = env('DB_' . strtoupper($db) . '_USERNAME');
-    $password = env('DB_' . strtoupper($db) . '_PASSWORD');
-    $database = env('DB_' . strtoupper($db) . '_DATABASE');
+    $servername = config('session.database.host');
+    $port = config('database.default.port');
+    $username = config('database.default.user');
+    $password = config('database.default.password');
+    $database = config('database.default.schema');
     try {
       $db = new \PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
       $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);

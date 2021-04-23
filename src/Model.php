@@ -64,11 +64,11 @@ class MODEL
          * Establish Connecetion with Database
          * ENV Connection convention: DB_CONNECTION_X
          */
-        $servername = env('DB_' . strtoupper($this->connection) . '_HOST');
-        $port = env('DB_' . strtoupper($this->connection) . '_PORT');
-        $username = env('DB_' . strtoupper($this->connection) . '_USERNAME');
-        $password = env('DB_' . strtoupper($this->connection) . '_PASSWORD');
-        $database = env('DB_' . strtoupper($this->connection) . '_DATABASE');
+        $servername = config('database.' . strtolower($this->connection) . '.host');
+        $port = config('database.' . strtolower($this->connection) . '.port');
+        $username = config('database.' . strtolower($this->connection) . '.user');
+        $password = config('database.' . strtolower($this->connection) . '.password');
+        $database = config('database.' . strtolower($this->connection) . '.schema');
         try {
             $db = new PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -380,11 +380,5 @@ class MODEL
     private function joinProcessor($mode, $args)
     {
         $this->_join .= " $mode $args[0] ON $args[1] $args[2] $args[3] ";
-    }
-
-    public static function close()
-    {
-        STORAGE::$db = null;
-        STORAGE::$table = null;
     }
 }
