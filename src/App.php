@@ -2,6 +2,7 @@
 
 namespace MightyCore;
 
+use MightyCore\Vault\SessionManager;
 use MightyCore\Http\Request;
 use MightyCore\Http\Response;
 use MightyCore\Routing\RouteProcessor;
@@ -30,8 +31,15 @@ class App
     {
         /**
          * Starts the SECURITY Module
+         * DEPRECATED
          */
-        Security::init();
+        // Security::init();
+
+        /**
+         * Start session manager
+         */
+        $sessionManager = new SessionManager();
+        $sessionManager->sessionStart();
 
         $this->response = new Response();
 
