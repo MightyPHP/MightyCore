@@ -12,8 +12,8 @@ class VerifyCsrf
   public function __construct()
   {
     $request = new Request();
-    if($request->query('csrf_token') != null){
-      $this->csrf = $request->query('csrf_token');
+    if($request->form('csrf_token') != null){
+      $this->csrf = $request->form('csrf_token');
     }else if($request->body('csrf_token') != null){
       $this->csrf = $request->body('csrf_token');
     }
