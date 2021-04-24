@@ -18,7 +18,7 @@ class VIEW {
         /**
          * Injects CSRF
          */
-        $view_file = preg_replace('/{{\s*(@csrf)\s*}}/', '<input id="csrf_token" name="csrf_token" type="hidden" value='.$_SESSION['csrf_token'].' />', $view_file);
+        $view_file = preg_replace('/{{\s*(@csrf)\s*}}/', '<input id="csrf_token" name="csrf_token" type="hidden" value='.session('csrf_token').' />', $view_file);
 
         $pattern = "/{{\s*(@return(.*?))\s*}}/";
         if(preg_match_all($pattern, $view_file, $scope)){
@@ -52,7 +52,7 @@ class VIEW {
          * csrf_token() function
          */
         $csrfFunction = new \Twig\TwigFunction('csrf_token', function () {
-            return $_SESSION['csrf_token'];
+            return session('csrf_token');
         });
         $twig->addFunction($csrfFunction);
 
@@ -86,7 +86,7 @@ class VIEW {
         }
         
         $twig->addGlobal('app', [
-            'session' => $_SESSION,
+            'session' => session(),
             'request' => new Request()
         ]);
         return $twig->render('twig', $data); 

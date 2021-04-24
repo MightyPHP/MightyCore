@@ -1,4 +1,7 @@
 <?php
+
+use MightyCore\Vault\SessionManager;
+
 define("DOC_ROOT", __DIR__."/../../../../../");
 require __DIR__ . '/../../../../autoload.php';
 
@@ -95,6 +98,22 @@ function trans($data){
       return $lang[$var];
   }else{
       return '';
+  }
+}
+
+function session(string $key = null, string $value = null){
+  // return SessionManager::sessionSetterGetter($key, $value);
+  if($key == null){
+    return $_SESSION;
+  }
+
+  if($value == null){
+    return $_SESSION[$key];
+  }
+
+  if($value != null){
+    $_SESSION[$key] = $value;
+    return $_SESSION[$key];
   }
 }
 
