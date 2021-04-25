@@ -82,7 +82,7 @@ function env(string $env, $default=null){
  * @param string  $data   The file.key pair for translation look up
  * @return  string
  */
-function trans($data){
+function trans($data, ...$args){
   $data = explode(".", $data);
   $file = $data[0];
   $var = $data[1];
@@ -95,7 +95,11 @@ function trans($data){
 
   $lang = include(DOC_ROOT."Utilities/Lang/$mode/$file.php");
   if(!empty($lang[$var])){
+    if(count($args) > 0){
+      return sprintf($lang[$var], ...$args);
+    }else{
       return $lang[$var];
+    }
   }else{
       return '';
   }
