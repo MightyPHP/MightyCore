@@ -85,7 +85,6 @@ class SessionManager
   public function dbSessionDestroy($id){
     $stmt = $this->db->prepare("DELETE FROM ".config('session.database.table')." WHERE id = ?");
     $stmt->execute([$id]);
-    $data = $stmt->fetch(\PDO::FETCH_OBJ);
 
     return true;
   }
