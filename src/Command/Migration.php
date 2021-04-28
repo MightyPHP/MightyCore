@@ -178,12 +178,13 @@ class Migration
 
   private function alterTable($db, $query)
   {
-    $servername = env('DB_' . strtoupper($db) . '_HOST');
-    $username = env('DB_' . strtoupper($db) . '_USERNAME');
-    $password = env('DB_' . strtoupper($db) . '_PASSWORD');
-    $database = env('DB_' . strtoupper($db) . '_DATABASE');
+    $servername = config('database.'.$db.'.host');
+    $port = config('database.'.$db.'.port');
+    $username = config('database.'.$db.'.user');
+    $password = config('database.'.$db.'.password');
+    $database = config('database.'.$db.'.schema');
     try {
-      $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+      $db = new \PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
       $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
       $stmt = $db->prepare($query);
       $stmt->execute();
@@ -195,12 +196,13 @@ class Migration
   private function deleteMigrateDB($token)
   {
     $db = 'default';
-    $servername = env('DB_' . strtoupper($db) . '_HOST');
-    $username = env('DB_' . strtoupper($db) . '_USERNAME');
-    $password = env('DB_' . strtoupper($db) . '_PASSWORD');
-    $database = env('DB_' . strtoupper($db) . '_DATABASE');
+    $servername = config('database.'.$db.'.host');
+    $port = config('database.'.$db.'.port');
+    $username = config('database.'.$db.'.user');
+    $password = config('database.'.$db.'.password');
+    $database = config('database.'.$db.'.schema');
     try {
-      $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+      $db = new \PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
       $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
       $stmt = $db->prepare("DELETE FROM `migrations` WHERE migration='$token';");
@@ -213,12 +215,13 @@ class Migration
   private function writeMigrateDB($token)
   {
     $db = 'default';
-    $servername = env('DB_' . strtoupper($db) . '_HOST');
-    $username = env('DB_' . strtoupper($db) . '_USERNAME');
-    $password = env('DB_' . strtoupper($db) . '_PASSWORD');
-    $database = env('DB_' . strtoupper($db) . '_DATABASE');
+    $servername = config('database.'.$db.'.host');
+    $port = config('database.'.$db.'.port');
+    $username = config('database.'.$db.'.user');
+    $password = config('database.'.$db.'.password');
+    $database = config('database.'.$db.'.schema');
     try {
-      $db = new \PDO("mysql:host=$servername;dbname=$database", $username, $password);
+      $db = new \PDO("mysql:host=$servername:$port;dbname=$database", $username, $password);
       $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
       /**
