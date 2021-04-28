@@ -97,7 +97,7 @@ class Migration
 
   private function getDefaultDB()
   {
-    $servername = config('session.database.host');
+    $servername = config('database.default.host');
     $port = config('database.default.port');
     $username = config('database.default.user');
     $password = config('database.default.password');
