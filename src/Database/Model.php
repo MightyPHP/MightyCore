@@ -42,6 +42,7 @@ class Model
     private $_where = '';
     private $_group = '';
     private $_order = '';
+    private $_limit = '';
     private $_params = array();
     private $_updateParams = array();
 
@@ -158,6 +159,7 @@ class Model
         $this->_where = '';
         $this->_group = '';
         $this->_order = '';
+        $this->_limit = '';
         $this->_params = array();
         $this->_updateParams = array();
 
@@ -194,23 +196,19 @@ class Model
      */
     public function get()
     {
-        $objects = $this->execute()->fetchAll(PDO::FETCH_OBJ);
+        $objects = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
 
         // Initialize model object array
         $modelObjects = array();
         foreach($objects as $object){
-            $class = get_called_class();
-            $invokedClass = new $class((array)$object);
-
             foreach ($this->_include as $include){
                 $includeClassName = (new \ReflectionClass($include->class))->getShortName();
                 $includeClassName = str_replace("Model", "", $includeClassName);
                 $includeClassName = lcfirst($includeClassName);
-                $invokedClass->{$includeClassName} = $include->class->where($include->foreignColumn, $object->{$include->localColumn})
+                $object->{$includeClassName} = $include->class->where($include->foreignColumn, $object->{$include->localColumn})
                                         ->get();
             }
-
-            $modelObjects[]  = $invokedClass;
+            $modelObjects[]  = $object;
         }
 
         return $modelObjects;
@@ -276,9 +274,9 @@ class Model
 
         if ($this->mode == 'update') {
             $this->_params = array_merge($this->_updateParams, $this->_params);
-            $query = $this->_main . " " . $this->_where . " " . $this->_group . " " . $this->_order;
+            $query = $this->_main . " " . $this->_where . " " . $this->_limit . " " . $this->_group . " " . $this->_order;
         } else {
-            $query = $this->_main . " " . $this->_join . " " . $this->_where . " " . $this->_group . " " . $this->_order;
+            $query = $this->_main . " " . $this->_where . " " . $this->_limit . " " . $this->_group . " " . $this->_order;
         }
 
         return $query;
@@ -524,23 +522,44 @@ class Model
         return $this;
     }
 
-    public function innerJoin()
+  /**
+   * @param string $table The table to join
+   * @param string $localKeyCol The local key or column
+   * @param string $operator The operator for column or key comparison
+   * @param string $foreignKeyCol The foreign key or column
+   * @return $this
+   */
+    public function innerJoin(string $table, string $localKeyCol, string $operator, string $foreignKeyCol)
     {
-        $args = func_get_args();
+        $args = [$table, $localKeyCol, $operator, $foreignKeyCol];
         $this->joinProcessor('INNER JOIN', $args);
         return $this;
     }
 
-    public function leftJoin()
+  /**
+   * @param string $table The table to join
+   * @param string $localKeyCol The local key or column
+   * @param string $operator The operator for column or key comparison
+   * @param string $foreignKeyCol The foreign key or column
+   * @return $this
+   */
+    public function leftJoin(string $table, string $localKeyCol, string $operator, string $foreignKeyCol)
     {
-        $args = func_get_args();
+      $args = [$table, $localKeyCol, $operator, $foreignKeyCol];
         $this->joinProcessor('LEFT JOIN', $args);
         return $this;
     }
 
-    public function outerJoin()
+  /**
+   * @param string $table The table to join
+   * @param string $localKeyCol The local key or column
+   * @param string $operator The operator for column or key comparison
+   * @param string $foreignKeyCol The foreign key or column
+   * @return $this
+   */
+    public function outerJoin(string $table, string $localKeyCol, string $operator, string $foreignKeyCol)
     {
-        $args = func_get_args();
+        $args = [$table, $localKeyCol, $operator, $foreignKeyCol];
         $this->joinProcessor('OUTER JOIN', $args);
         return $this;
     }
@@ -616,5 +635,10 @@ class Model
             $this->where($primaryKey->Field, $this->{$primaryKey->Field})->update($params);
             return $this->{$primaryKey->Field};
         }
+    }
+
+    public function limit(int $offset, int $limit){
+      $this->_limit = " LIMIT $offset, $limit ";
+      return $this;
     }
 }
