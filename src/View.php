@@ -65,12 +65,12 @@ class VIEW {
         $twig->addFunction($transFunction);
 
         /**
-         * return() function
+         * component() function
          */
-        $returnFunction = new \Twig\TwigFunction('return', function ($value, $args=[]) {
+        $componentFunction = new \Twig\TwigFunction('component', function ($value, $args=[]) {
             return new \Twig\Markup($this->mapControllers($value, $args), "utf-8");
         });
-        $twig->addFunction($returnFunction);
+        $twig->addFunction($componentFunction);
 
         /**
          * asset() function
