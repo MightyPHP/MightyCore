@@ -658,7 +658,7 @@ class Model
      */
     public function paginate(int|null $page = null, int|null $perPage = null){
         if($page == null){ $page = 1; }
-        if($perPage == null){ $perPage = 10; }
+        if($perPage == null){ $perPage = config("database.perPage"); }
 
         $dataObj = $this;
         $countObj = $this;
