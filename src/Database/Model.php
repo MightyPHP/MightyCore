@@ -276,7 +276,7 @@ class Model
             $this->_params = array_merge($this->_updateParams, $this->_params);
             $query = $this->_main . " " . $this->_where . " " . $this->_limit . " " . $this->_group . " " . $this->_order;
         } else {
-            $query = $this->_main . " " . $this->_where . " " . $this->_limit . " " . $this->_group . " " . $this->_order;
+            $query = $this->_main . " " . $this->_join . " " . $this->_where . " " . $this->_limit . " " . $this->_group . " " . $this->_order;
         }
 
         return $query;
@@ -637,8 +637,50 @@ class Model
         }
     }
 
+    /**
+     * Limits the records of queries returned data.
+     *
+     * @param int $offset The offset of the data to start from
+     * @param int $limit The upper limit of the data to retrieve
+     * @return $this
+     */
     public function limit(int $offset, int $limit){
       $this->_limit = " LIMIT $offset, $limit ";
       return $this;
+    }
+
+    /**
+     * Help to paginate the retrieved data from database queries
+     *
+     * @param int|null $page The current page
+     * @param int|null $perPage The number of records per page
+     * @return array
+     */
+    public function paginate(int|null $page = null, int|null $perPage = null){
+        if($page == null){ $page = 1; }
+        if($perPage == null){ $perPage = 10; }
+
+        $dataObj = $this;
+        $countObj = $this;
+
+        $dataObj->limit(($page-1)*$perPage, $page*$perPage);
+        $data = $dataObj->get();
+
+        $countObj->select("COUNT(*) as total");
+        $count = $countObj->getOne();
+
+        return [
+            "data" => $data,
+            "range" => [
+                "from" => (($page-1)*$perPage)+1,
+                "to" => $count->total > $page*$perPage ? $page*$perPage : $count->total
+            ],
+            "page" => [
+                "total" => ceil($count->total / $perPage),
+                "current" => $page,
+                "perPage" => $perPage
+            ],
+            "count" => $count->total,
+        ];
     }
 }
