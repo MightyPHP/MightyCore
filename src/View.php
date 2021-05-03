@@ -13,7 +13,11 @@ class VIEW {
     }
 
     public function render($data = null) {
-        $view_file = file_get_contents(DOC_ROOT . '/Application/Views/' . $this->_view . ".html");
+        if(file_exists(DOC_ROOT . '/Application/Views/' . $this->_view . ".twig")){
+          $view_file = file_get_contents(DOC_ROOT . '/Application/Views/' . $this->_view . ".twig");
+        }else{
+          $view_file = file_get_contents(DOC_ROOT . '/Application/Views/' . $this->_view . ".html");
+        }
 
         /**
          * Injects CSRF
@@ -49,12 +53,20 @@ class VIEW {
         $twig->addFunction($routeFunction);
 
         /**
-         * csrf_token() function
+         * csrf() function
          */
-        $csrfFunction = new \Twig\TwigFunction('csrf_token', function () {
-            return session('csrf_token');
+        $csrfFunction = new \Twig\TwigFunction('csrf', function () {
+          return '<input type="hidden" name="csrf_token" value="'.session('csrf_token').'" />';
         });
         $twig->addFunction($csrfFunction);
+
+        /**
+         * csrf_token() function
+         */
+        $csrfTokenFunction = new \Twig\TwigFunction('csrf_token', function () {
+            return session('csrf_token');
+        });
+        $twig->addFunction($csrfTokenFunction);
 
         /**
          * trans() function
