@@ -70,6 +70,23 @@ class App
                 $this->response->setStatusCode(404);
                 $this->response->send('Not found.');
             } else {
+                /**
+                 * Assign route name if it exists
+                 */
+                if(!empty($route["name"])){
+                    Request::$routeName = $route["name"];
+                }
+
+                /**
+                 * Assign route controller
+                 */
+                Request::$controller = $route["controller"];
+
+                /**
+                 * Assign route action
+                 */
+                Request::$action = $route["method"];
+
                 /**Start to administer middleware */
                 if (!empty($route['middlewares'])) {
                     foreach ($route['middlewares'] as $k => $v) {

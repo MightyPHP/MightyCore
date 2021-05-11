@@ -32,5 +32,6 @@ class MicroRouter
   public function name($name){
     $url = preg_replace('/(\/[:])\w+/', '', $this->path);
     RouteStore::$namedRoutes[$name] = $url;
+    RouteStore::$routes[$this->method][$this->path]['name'] = $name;
   }
 }

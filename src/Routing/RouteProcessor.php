@@ -102,7 +102,6 @@ class RouteProcessor
   {
     $exp_request = explode('/', $this->inbound);
     foreach (RouteStore::$routes[strtoupper($this->method)] as $route => $value) {
-      // dump(RouteStore::$routes);
       $exp_route = explode('/', $route);
       $matched = false;
       if (count($exp_request) == count($exp_route)) {
