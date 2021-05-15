@@ -5,19 +5,21 @@ namespace MightyCore\Vault;
 class SessionManager
 {
   private $db;
+  private $driver;
 
   public function __construct()
   {
-    $this->db = $this->getDefaultDB();
+    $this->driver = config('session.driver');
+    if($this->driver == "database") {
+      $this->db = $this->getDefaultDB();
+    }
   }
 
   public function sessionStart($limit = 0, $path = '/', $domain = null, $secure = null)
   {
-    $sessionDriver = config('session.driver');
-
-    if($sessionDriver == "file"){
+    if($this->driver == "file"){
       session_save_path(DOC_ROOT."/Storage/Sessions");
-    }else if($sessionDriver == "database"){
+    }else if($this->driver == "database"){
       session_set_save_handler(
         array($this, "dbSessionOpen"),
         array($this, "dbSessionClose"),
