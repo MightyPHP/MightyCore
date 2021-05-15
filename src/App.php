@@ -80,7 +80,7 @@ class App
                 /**
                  * Assign route controller
                  */
-                Request::$controller = $route["controller"];
+                Request::$controller = str_replace("Controller", "", $route["controller"]);
 
                 /**
                  * Assign route action

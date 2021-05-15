@@ -13,10 +13,10 @@ class VIEW {
     }
 
     public function render($data = null) {
-        if(file_exists(DOC_ROOT . '/Application/Views/' . $this->_view . ".twig")){
-          $view_file = file_get_contents(DOC_ROOT . '/Application/Views/' . $this->_view . ".twig");
+        if(file_exists(DOC_ROOT . 'Application/Views/' . $this->_view . ".twig")){
+          $view_file = file_get_contents(DOC_ROOT . 'Application/Views/' . $this->_view . ".twig");
         }else{
-          $view_file = file_get_contents(DOC_ROOT . '/Application/Views/' . $this->_view . ".html");
+          $view_file = file_get_contents(DOC_ROOT . 'Application/Views/' . $this->_view . ".html");
         }
 
         /**
