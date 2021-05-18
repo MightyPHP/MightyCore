@@ -59,6 +59,11 @@ class Response
       $content = json_encode($content);
     }
 
+    if(is_object($content)){
+        $content = get_object_vars($content);
+        $content = json_encode((array)$content);
+    }
+
     $responseString = '';
     if(isset($this->statusText[$this->statusCode])){
       $responseString = $this->statusText[$this->statusCode];

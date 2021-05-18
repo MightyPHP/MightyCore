@@ -137,6 +137,7 @@ function view($view = null, array $data = [])
 {
     if(is_array($view)){
         $data = $view;
+        $view = str_replace("Controller", "", Request::$controller) . "/" . Request::$action;
     }
 
     if($view == null){
@@ -189,5 +190,10 @@ function dump(...$args)
     if (count($args) == 1) {
         $args = $args[0];
     }
+
+    if(is_object($args)){
+        $args = get_object_vars($args);
+    }
+
     echo "<pre>" . print_r($args, true) . "</pre>";
 }

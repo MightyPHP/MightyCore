@@ -197,21 +197,7 @@ class Model
     public function get()
     {
         $objects = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
-
-        // Initialize model object array
-        $modelObjects = array();
-        foreach($objects as $object){
-            foreach ($this->_include as $include){
-                $includeClassName = (new \ReflectionClass($include->class))->getShortName();
-                $includeClassName = str_replace("Model", "", $includeClassName);
-                $includeClassName = lcfirst($includeClassName);
-                $object->{$includeClassName} = $include->class->where($include->foreignColumn, $object->{$include->localColumn})
-                                        ->get();
-            }
-            $modelObjects[]  = $object;
-        }
-
-        return $modelObjects;
+        return $objects;
     }
 
     /**
@@ -221,24 +207,9 @@ class Model
      */
     public function getOne()
     {
-        $attributes = $this->execute()->fetch(PDO::FETCH_OBJ);
-        if($attributes) {
-            foreach ($attributes as $attribute => $value) {
-                $this->{$attribute} = $value;
-            }
-
-            foreach ($this->_include as $include){
-                $includeClassName = (new \ReflectionClass($include->class))->getShortName();
-                $includeClassName = str_replace("Model", "", $includeClassName);
-                $includeClassName = lcfirst($includeClassName);
-                $this->{$includeClassName} = $include->class->where($include->foreignColumn, $this->{$include->localColumn})
-                    ->get();
-            }
-
-            return $this;
-        }else{
-            return null;
-        }
+        $this->_limit = " LIMIT 1 ";
+        $data = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
+        return $data[0];
     }
 
     /**
@@ -670,7 +641,7 @@ class Model
         $count = $countObj->getOne();
 
         return [
-            "data" => $data,
+            "data" => get_object_vars($data),
             "range" => [
                 "from" => (($page-1)*$perPage)+1,
                 "to" => $count->total > $page*$perPage ? $page*$perPage : $count->total
