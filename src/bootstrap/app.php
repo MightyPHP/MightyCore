@@ -197,3 +197,7 @@ function dump(...$args)
 
     echo "<pre>" . print_r($args, true) . "</pre>";
 }
+
+function public_get_object_vars($data){
+    return get_object_vars($data);
+}
