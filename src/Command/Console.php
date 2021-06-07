@@ -17,7 +17,7 @@ class CONSOLE
             $this->func = $arg[0];
         }
 
-        $commands = ['start', 'seed', 'migration', 'make', 'hello_world', 'schedule'];
+        $commands = ['start', 'seed', 'migration', 'make', 'hello_world', 'schedule', 'key'];
 
         // $this->method = $arg[0];
         $method = $arg[0];
@@ -35,6 +35,10 @@ class CONSOLE
 
     private function make(){
         new Make($this->argv, $this->func);
+    }
+
+    private function key(){
+        new Key($this->argv, $this->func);
     }
 
     private function schedule(){
