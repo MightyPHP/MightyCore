@@ -196,12 +196,7 @@ class Model
      */
     public function get()
     {
-        if($this->_join != ''){
-            $objects = $this->execute()->fetchAll(PDO::FETCH_OBJ);
-        }else{
-            $objects = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
-        }
-
+        $objects = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
         return $objects;
     }
 
@@ -213,13 +208,12 @@ class Model
     public function getOne()
     {
         $this->_limit = " LIMIT 1 ";
-        if($this->_join != ''){
-            $data = $this->execute()->fetchAll(PDO::FETCH_OBJ);
+        $data = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
+        if(!empty($data)){
+            return $data[0];
         }else{
-            $data = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
+            return [];
         }
-
-        return $data[0];
     }
 
     /**
@@ -608,7 +602,7 @@ class Model
             $params[$property->Field] = $this->{$property->Field} ?? null;
         }
 
-        if(!isset($this->{$primaryKey->Field}) || $this->{$primaryKey->Field} == null){
+        if($this->{$primaryKey->Field} == null){
             // Primary key is null, this is not an update
             return $this->insert($params);
         }else{
@@ -650,13 +644,8 @@ class Model
         $countObj->select("COUNT(*) as total");
         $count = $countObj->getOne();
 
-        $massagedData = [];
-        foreach ($data as $obj) {
-            $massagedData[] = public_get_object_vars($obj);
-        }
-
         return [
-            "data" => $massagedData,
+            "data" => get_object_vars((object)$data),
             "range" => [
                 "from" => (($page-1)*$perPage)+1,
                 "to" => $count->total > $page*$perPage ? $page*$perPage : $count->total
