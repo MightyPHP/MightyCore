@@ -107,11 +107,11 @@ function view($view = null, array $data = [])
 {
     if(is_array($view)){
         $data = $view;
-        $view = str_replace("Controller", "", Request::$controller) . "/" . Request::$action;
+        $view = str_replace("Controller", "", \MightyCore\Http\Request::$controller) . "/" . \MightyCore\Http\Request::$action;
     }
 
     if($view == null){
-        $view = str_replace("Controller", "", Request::$controller) . "/" . Request::$action;
+        $view = str_replace("Controller", "", \MightyCore\Http\Request::$controller) . "/" . \MightyCore\Http\Request::$action;
     }
 
     $class = new \MightyCore\View($view);
@@ -134,17 +134,27 @@ function route($path)
     return $route;
 }
 
-function dump(...$args)
-{
-    if (count($args) == 1) {
-        $args = $args[0];
+/**
+ * Dump variable.
+ */
+if ( ! function_exists('d') ) {
+    
+    function d() {
+        call_user_func_array( 'dump' , func_get_args() );
     }
 
-    if(is_object($args)){
-        $args = get_object_vars($args);
+}
+
+/**
+ * Dump variables and die.
+ */
+if ( ! function_exists('dd') ) {
+
+    function dd() {
+        call_user_func_array( 'dump' , func_get_args() );
+        die();
     }
 
-    echo "<pre>" . print_r($args, true) . "</pre>";
 }
 
 function encrypt($plaintext){
@@ -181,5 +191,15 @@ function decrypt($ciphertext){
     }else {
         return false;
     }
+}
+
+/**
+ * Get object vars from a public scope
+ *
+ * @param object $object The object to tear down
+ * @return array The torn down array
+ */
+function public_get_object_vars(object $object){
+    return get_object_vars($object);
 }
 
