@@ -602,6 +602,10 @@ class Model
             $params[$property->Field] = $this->{$property->Field} ?? null;
         }
 
+        if(!isset($this->{$primaryKey->Field})){
+            $this->{$primaryKey->Field} = null;
+        }
+
         if($this->{$primaryKey->Field} == null){
             // Primary key is null, this is not an update
             return $this->insert($params);
