@@ -42,7 +42,7 @@ class Request
     /**
      * Holds all the body of the request
      */
-    private array|null $body = [];
+    private array $body = [];
 
     /**
      * Holds the current route's name if applicable
