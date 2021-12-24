@@ -93,22 +93,6 @@ class VIEW {
         });
         $twig->addFunction($returnFunction);
 
-        /**
-         * encrypt() function
-         */
-        $transFunction = new \Twig\TwigFunction('encrypt', function ($value) {
-            return encrypt($value);
-        });
-        $twig->addFunction($transFunction);
-
-        /**
-         * decrypt() function
-         */
-        $transFunction = new \Twig\TwigFunction('decrypt', function ($value) {
-            return decrypt($value);
-        });
-        $twig->addFunction($transFunction);
-
         if(empty($data)){
             $data = array();
         }

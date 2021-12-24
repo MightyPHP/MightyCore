@@ -209,11 +209,7 @@ class Model
     {
         $this->_limit = " LIMIT 1 ";
         $data = $this->execute()->fetchAll(PDO::FETCH_CLASS, get_called_class());
-        if(!empty($data)){
-            return $data[0];
-        }else{
-            return [];
-        }
+        return $data[0];
     }
 
     /**
@@ -602,10 +598,6 @@ class Model
             $params[$property->Field] = $this->{$property->Field} ?? null;
         }
 
-        if(!isset($this->{$primaryKey->Field})){
-            $this->{$primaryKey->Field} = null;
-        }
-
         if($this->{$primaryKey->Field} == null){
             // Primary key is null, this is not an update
             return $this->insert($params);
@@ -649,7 +641,7 @@ class Model
         $count = $countObj->getOne();
 
         return [
-            "data" => get_object_vars((object)$data),
+            "data" => get_object_vars($data),
             "range" => [
                 "from" => (($page-1)*$perPage)+1,
                 "to" => $count->total > $page*$perPage ? $page*$perPage : $count->total
