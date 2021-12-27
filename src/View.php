@@ -93,6 +93,14 @@ class VIEW {
         });
         $twig->addFunction($returnFunction);
 
+        /**
+         * env() function
+         */
+        $returnFunction = new \Twig\TwigFunction('env', function ($value) {
+            return env($value);
+        });
+        $twig->addFunction($returnFunction);
+
         if(empty($data)){
             $data = array();
         }
