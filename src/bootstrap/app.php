@@ -83,4 +83,4 @@ function env($env, $default=false){
 /**
  * To set default time zone
  */
-date_default_timezone_set(defined('DEFAULT_TIMEZONE') ?? env('DEFAULT_TIMEZONE'));
+date_default_timezone_set(env('DEFAULT_TIMEZONE', 'GMT'));
