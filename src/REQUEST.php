@@ -75,7 +75,11 @@ class REQUEST{
         if(is_array($mould)){
             for($i=0; $i<sizeof($mould); $i++){
                 if(isset($params[$i]) && !empty($params[$i])){
-                    $newParams[$mould[$i]] = $params[$i];
+                    if(strpos($params[$i], '?') > 0){
+                        $newParams[$mould[$i]] = substr($params[$i],0,strpos($params[$i], '?'));
+                    }else{
+                        $newParams[$mould[$i]] = $params[$i];
+                    }
                 }
             }
             REQUEST::$params = $newParams;
